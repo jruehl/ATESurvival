@@ -273,7 +273,7 @@ run <- function(n,
                          NA)
       
       
-      # prepare IF/WBS
+      # prepare IF/WBS: fit (cause-specific) Cox models
       Cox_time <- proc.time()
       if(is.null(m)){ # competing risks
         csc <- CSC(formula = list(Hist(time, event) ~ 
