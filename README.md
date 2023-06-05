@@ -1,4 +1,4 @@
-The package 'ATESurvival' in this repository includes the function 'ATE_IF_WBS' that computes the ATE and the associated confidence intervals/bands for time-to-event data with competing risks, using influence functions and/or the wild bootstrap. Besides, the function 'EBS' yields the ATE for data that have been drawn with replacement (i.e. in the context of bootstrapping).
+The package 'ATESurvival' in this repository includes the function 'ATE_IF_WBS' that computes the average treatment effect and corresponding confidence intervals/bands for time-to-event data with competing risks, using influence functions and/or the wild bootstrap. Besides, the function 'EBS' yields the ATE for data that have been drawn with replacement (i.e. in the context of bootstrapping).
 The R script 'simulations' reproduces the simulation results in the manuscript 'Resampling-based confidence intervals and bands for the average treatment effect in observational studies with competing risks' (Rühl, Friedrich).
 
 ---
