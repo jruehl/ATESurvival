@@ -119,7 +119,6 @@ run <- function(n,
   ## iter: number of Monte Carlo repetitions
   ## seed: seed for reproducibility
   ## cores: number of CPU cores for parallel computations
-  ##   (use 16 cores to reproduce the results from the manuscript)
   
   # output: list with (summarized) simulation results
   
