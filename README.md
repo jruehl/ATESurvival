@@ -1,6 +1,5 @@
 The package 'ATESurvival' in this repository includes the function 'ATE_IF_WBS' that computes the average treatment effect and corresponding confidence intervals/bands for time-to-event data with competing risks, using influence functions and/or the wild bootstrap. Besides, the function 'EBS' yields the ATE for data that have been drawn with replacement (i.e. in the context of bootstrapping).  
-To install the package, use the following command:
-  install.packages("ATESurvival_1.0.tar.gz", repos = NULL, source = TRUE) 
+To install the package, use the following command: install.packages("ATESurvival_1.0.tar.gz", repos = NULL, source = TRUE)  
 Note that on Windows systems, Rtools is required (see https://cran.r-project.org/bin/windows/Rtools/rtools43/rtools.html).
 
 The R scripts 'simu_masterscript' (using 'simu_functions') and 'hd_analysis' reproduce the simulation results and the data analysis in the manuscript 'Resampling-based confidence intervals and bands for the average treatment effect in observational studies with competing risks' (Rühl, Friedrich), respectively.
