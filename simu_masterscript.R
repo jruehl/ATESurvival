@@ -91,13 +91,6 @@ save(ATE_true, ATE_true_fig1, file = "Results/ATE_true.Rda")
 
 # run simulations ##############################################################
 
-# to save time, skip this section (l. 101-150) and use
-# load("Results/res_[effect]ATE_[scenario]_n[n].Rda")
-# with 
-# effect: adv/no/
-# scenario: noCens/lowCens/highCens/lowTreatProb/highTreatProb/lowVarCov/highVarCov/typeII
-# n: 50/75/100/200/300
-
 # create table of scenarios
 scenarios <- data.frame(order = 1:24,
                         scenario = rep(c("noCens", "lowCens", "highCens", 
