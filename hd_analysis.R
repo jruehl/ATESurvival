@@ -46,6 +46,12 @@ rownames(descrip) <- c("age, mean (sd)",
                        "extranodal disease")
 descrip
 
+# break ties
+set.seed(1234)
+hd$time[duplicated(hd$time)] <- 
+  hd$time[duplicated(hd$time)] +
+  rnorm(sum(duplicated(hd$time)), 0,0.001)
+
 
 # analyse data #################################################################
 
@@ -72,16 +78,16 @@ res_EBS <-
                 hd_bs[order(hd_bs$time),])
             ))
             # calculate average treatment effect
-            EBS(
-              Z = list(csc_bs$models$`Cause 1`$x,
-                       csc_bs$models$`Cause 2`$x),
-              event = hd_bs$status[order(hd_bs$time)],
-              time = sort(hd_bs$time),
-              t = 0:35,
-              beta = coefficients(csc_bs),
-              index_A = c(1,1),
-              cause = 2
-            )
+            ATE(ID = order(hd_bs$time),
+                Z = list(csc_bs$models$`Cause 1`$x,
+                         csc_bs$models$`Cause 2`$x),
+                index_A = c(1,1),
+                event = hd_bs$status[order(hd_bs$time)],
+                time = sort(hd_bs$time),
+                beta = coefficients(csc_bs),
+                t = 0:35,
+                cause = 2,
+                IF = FALSE, WBS = FALSE)$ATE
           }
 if(.Platform$OS.type == "windows"){
   stopCluster(cl)
@@ -108,21 +114,42 @@ mult_Weird <- sapply(1:event_num, function(j){
   rbinom(1e4, Y, 1/Y) - 1
 })
 # calculate average treatment effect, confidence intervals & bands
-res_IF_WBS <- ATE_IF_WBS(
-  Z = list(csc$models$`Cause 1`$x,
-           csc$models$`Cause 2`$x),
-  event = hd$status[order(hd$time)], 
-  time = sort(hd$time),
-  t = 0:35,
-  beta = coefficients(csc),
-  index_A = c(1,1),
-  cause = 2,
-  G_IF = rnorm(dim(hd)[1] * 1e4),
-  G_Lin_init = rnorm(1e4 * event_num),
-  G_Bey_init = rpois(1e4 * event_num, 1) - 1,
-  G_Weird_init = c(t(mult_Weird))
-)
-
+## IF & WBS (Lin multipliers)
+res_IF_WBS_Lin <- ATE(ID = order(hd$time),
+                      Z = list(csc$models$`Cause 1`$x,
+                               csc$models$`Cause 2`$x),
+                      index_A = c(1,1),
+                      event = hd$status[order(hd$time)],
+                      time = sort(hd$time),
+                      beta = coefficients(csc),
+                      t = 0:35,
+                      cause = 2,
+                      G_IF_init = rnorm(dim(hd)[1] * 1e4),
+                      G_WBS_init = rnorm(1e4 * event_num))
+## WBS (Beyersmann multipliers)
+res_WBS_Bey <- ATE(ID = order(hd$time),
+                   Z = list(csc$models$`Cause 1`$x,
+                            csc$models$`Cause 2`$x),
+                   index_A = c(1,1),
+                   event = hd$status[order(hd$time)],
+                   time = sort(hd$time),
+                   beta = coefficients(csc),
+                   t = 0:35,
+                   cause = 2,
+                   IF = FALSE,
+                   G_WBS_init = rpois(1e4 * event_num, 1) - 1)
+## WBS (weird bootstrap multipliers)
+res_WBS_Weird <- ATE(ID = order(hd$time),
+                     Z = list(csc$models$`Cause 1`$x,
+                              csc$models$`Cause 2`$x),
+                     index_A = c(1,1),
+                     event = hd$status[order(hd$time)],
+                     time = sort(hd$time),
+                     beta = coefficients(csc),
+                     t = 0:35,
+                     cause = 2,
+                     IF = FALSE,
+                     G_WBS_init = c(t(mult_Weird)))
 # store results
 res <- data.frame(
   time = rep(0:35, 5),
@@ -132,31 +159,31 @@ res <- data.frame(
                "WBS - Beyersmann et al.",
                "WBS - Weird bootstrap"), 
              each = 36),
-  ATE_hat = rep(res_IF_WBS[[1]], 5),
+  ATE_hat = rep(res_IF_WBS_Lin[[1]], 5),
   CI_lower = c(apply(res_EBS, 1, 
                      function(res_EBS_t){max(quantile(res_EBS_t, 0.025), -1)}),
-               res_IF_WBS[[2]][1,],
-               res_IF_WBS[[4]][3,],
-               res_IF_WBS[[4]][5,],
-               res_IF_WBS[[4]][7,]),
+               res_IF_WBS_Lin[[4]][1,],
+               res_IF_WBS_Lin[[8]][1,],
+               res_WBS_Bey[[8]][1,],
+               res_WBS_Weird[[8]][1,]),
   CI_upper = c(apply(res_EBS, 1, 
                      function(res_EBS_t){min(quantile(res_EBS_t, 0.975), 1)}),
-               res_IF_WBS[[2]][2,],
-               res_IF_WBS[[4]][4,],
-               res_IF_WBS[[4]][6,],
-               res_IF_WBS[[4]][8,]),
-  CB_lower = c(as.numeric(res_IF_WBS[[1]]) - 
+               res_IF_WBS_Lin[[4]][2,],
+               res_IF_WBS_Lin[[8]][2,],
+               res_WBS_Bey[[8]][2,],
+               res_WBS_Weird[[8]][2,]),
+  CB_lower = c(as.numeric(res_IF_WBS_Lin[[1]]) - 
                  q_EBS_sup * sqrt(apply(res_EBS, 1, var, na.rm = TRUE)),
-               res_IF_WBS[[3]][1,],
-               res_IF_WBS[[5]][3,],
-               res_IF_WBS[[5]][7,],
-               res_IF_WBS[[5]][11,]),
-  CB_upper = c(as.numeric(res_IF_WBS[[1]]) + 
+               res_IF_WBS_Lin[[5]][1,],
+               res_IF_WBS_Lin[[9]][1,],
+               res_WBS_Bey[[9]][1,],
+               res_WBS_Weird[[9]][1,]),
+  CB_upper = c(as.numeric(res_IF_WBS_Lin[[1]]) + 
                  q_EBS_sup * sqrt(apply(res_EBS, 1, var, na.rm = TRUE)),
-               res_IF_WBS[[3]][2,],
-               res_IF_WBS[[5]][4,],
-               res_IF_WBS[[5]][8,],
-               res_IF_WBS[[5]][12,])
+               res_IF_WBS_Lin[[5]][2,],
+               res_IF_WBS_Lin[[9]][2,],
+               res_WBS_Bey[[9]][2,],
+               res_WBS_Weird[[9]][2,])
 )
 
 ## Figure 7 ####
@@ -214,6 +241,6 @@ p2 <- ggplot(data = res, aes(x = time)) +
         panel.border = element_rect(fill=NA),
         legend.position = "none")
 p <- plot_grid(p1 + theme(legend.position = "none"), p2)
-png("Results/figures/figure_7.png", width = 1200, height = 500)
+png("Results/figure_7.png", width = 1200, height = 500)
 plot_grid(p, get_legend(p1), nrow=2, rel_heights = c(0.75, 0.2))
 dev.off()
