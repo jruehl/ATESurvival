@@ -91,6 +91,13 @@ save(ATE_true, ATE_true_fig1, file = "Results/ATE_true.Rda")
 
 # run simulations ##############################################################
 
+# to save time, skip this section (l. 101-151) and use
+# load("Results/res_[effect]ATE_[scenario]_n[n].Rda")
+# with 
+# effect: adv/no/
+# scenario: noCens/lowCens/highCens/lowTreatProb/highTreatProb/lowVarCov/highVarCov/typeII
+# n: 50/75/100/200/300
+
 # create table of scenarios
 scenarios <- data.frame(order = 1:24,
                         scenario = rep(c("noCens", "lowCens", "highCens", 
@@ -146,7 +153,7 @@ for(i in 1:dim(scenarios)[1]){
 
 # prepare outcomes #############################################################
 
-# to save time, skip this section (l. 158-252) and use
+# to save time, skip this section (l. 159-245) and use
 # load("Results/total_coverages.Rda")
 
 # summarize data for plots
@@ -179,17 +186,15 @@ for(i in 1:dim(scenarios)[1]){
                         ifelse(scenarios$beta_0[i] == 2, "yes", 
                                ifelse(scenarios$beta_0[i] == -2, "adverse", NA))),
         n = n,
-        t = rep(t, each=6),
+        t = rep(t, each=5),
         type = factor(rep(c("EBS",
                             "IF",
-                            "WBS (calculated)",
                             "WBS - Lin et al.",
                             "WBS - Beyersmann et al.",
                             "WBS - Weird bootstrap"), 
                           5),
                       levels = c("EBS",
                                  "IF",
-                                 "WBS (calculated)",
                                  "WBS - Lin et al.",
                                  "WBS - Beyersmann et al.",
                                  "WBS - Weird bootstrap")),
@@ -198,7 +203,7 @@ for(i in 1:dim(scenarios)[1]){
                         ifelse(scenarios$beta_0[i] == 0, "no", 
                                ifelse(scenarios$beta_0[i] == 2, "", 
                                       ifelse(scenarios$beta_0[i] == -2, "adv", NA))), 
-                        "ATE_", scenarios$scenario[i], "_n", n, "[[15]]")
+                        "ATE_", scenarios$scenario[i], "_n", n, "[[16]]")
         )))
       )
     )
@@ -214,26 +219,20 @@ for(i in 1:dim(scenarios)[1]){
         n = n,
         type = factor(c("EBS", 
                         "IF",
-                        "WBS - Lin et al. (calculated)",
                         "WBS - Lin et al.",
-                        "WBS - Beyersmann et al. (calculated)",
                         "WBS - Beyersmann et al.",
-                        "WBS - Weird bootstrap (calculated)",
                         "WBS - Weird bootstrap"),
                       levels = c("EBS",
                                  "IF",
-                                 "WBS - Lin et al. (calculated)",
                                  "WBS - Lin et al.",
-                                 "WBS - Beyersmann et al. (calculated)",
                                  "WBS - Beyersmann et al.",
-                                 "WBS - Weird bootstrap (calculated)",
                                  "WBS - Weird bootstrap")),
         coverage = eval(parse(
           text = paste0("res_", 
                         ifelse(scenarios$beta_0[i] == 0, "no", 
                                ifelse(scenarios$beta_0[i] == 2, "", 
                                       ifelse(scenarios$beta_0[i] == -2, "adv", NA))), 
-                        "ATE_", scenarios$scenario[i], "_n", n, "[[16]]")
+                        "ATE_", scenarios$scenario[i], "_n", n, "[[17]]")
         ))
       )
     )
@@ -249,7 +248,7 @@ save(total_coverage_CI, total_coverage_CB, file = "Results/total_coverages.Rda")
 # create plots #################################################################
 
 ## Figure 1 ####
-png("Results/figures/figure_1.png", width = 800, height = 500)
+png("Results/figure_1.png", width = 800, height = 500)
 ggplot(data = ATE_true_fig1, aes(x = t, y = ATE_true)) + 
   geom_line(aes(linetype = beta_0), linewidth = 0.85) +
   geom_point(data = ATE_true_fig1[c(rep(0, 5), rep(101, 5), rep(2 * 101, 5)) + 
@@ -283,12 +282,12 @@ for(scenario in c("noCens", "lowCens", "highCens",
   for(effect in c("adverse", "no", "yes")){
     if(scenario == "lowCens" & effect == "yes"){
       ## Figure 2 ####
-      png("Results/figures/figure_2.png", width = 1200, height = 500)
+      png("Results/figure_2.png", width = 1200, height = 500)
     }else if(scenario == "noCens" & effect == "adverse"){
       ## Figure 3 ####
-      png("Results/figures/figure_3.png", width = 1200, height = 500)
+      png("Results/figure_3.png", width = 1200, height = 500)
     }else{
-      png(paste0("Results/figures/SuppInfo/coverage_CI_", 
+      png(paste0("Results/coverage_CI_", 
                  ifelse(effect == "no", "no", 
                         ifelse(effect == "yes", "", "adv")), 
                  "ATE_", scenario, ".png"), 
@@ -307,9 +306,9 @@ for(scenario in c("noCens", "lowCens", "highCens",
   for(effect in c("adverse", "no", "yes")){
     if(scenario == "highTreatProb" & effect == "yes"){
       ## Figure 4 ####
-      png("Results/figures/figure_4.png", width = 800, height = 500)
+      png("Results/figure_4.png", width = 800, height = 500)
     }else{
-      png(paste0("Results/figures/SuppInfo/coverage_CB_", 
+      png(paste0("Results/coverage_CB_", 
                  ifelse(effect == "no", "no", 
                         ifelse(effect == "yes", "", "adv")), 
                  "ATE_", scenario, ".png"), 
@@ -321,11 +320,11 @@ for(scenario in c("noCens", "lowCens", "highCens",
 }
 
 ## Figure 5 ####
-png("Results/figures/figure_5.png", width = 800, height = 500)
+png("Results/figure_5.png", width = 800, height = 500)
 plot_width_t("lowCens", "yes", "CI", t = 5)
 dev.off()
 
 ## Figure 6 ####
-png("Results/figures/figure_6.png", width = 800, height = 500)
+png("Results/figure_6.png", width = 800, height = 500)
 plot_computation_times("lowCens", "yes")
 dev.off()
