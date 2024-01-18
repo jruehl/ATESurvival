@@ -7,7 +7,8 @@ generate_data <- function(n,
                           alpha_0 = 0, beta_0, gamma_0 = 0, delta_0 = 0, 
                           sd_cov = 1, 
                           true_ATE = FALSE, 
-                          cens = !true_ATE, cens_par = 200, m = NULL){
+                          cens = !true_ATE, cens_par = 200, m = NULL, 
+                          method = "cs"){
   
   # input:
   ## n: sample size
@@ -23,6 +24,8 @@ generate_data <- function(n,
   ## cens_par: parameter for censoring time distribution (if m is NULL)
   ## m: in case of type II censoring: number of events to observe before censoring
   ##   is imputed (else: NULL)
+  ## method: string denoting the data generating method 
+  ##   (ozenne: latent failure time model, cs: cause-specific Cox model)
   
   
   # output: data set with the subsequent columns:
@@ -43,14 +46,53 @@ generate_data <- function(n,
     p_treat <- exp(arg_treat) / (1 + exp(arg_treat))
   }
   A <- rbinom(n, 1, p_treat)
-  # generate type I event times
   arg_T1 <- beta_0*A + colSums(rep(c(1,0,1,0,0,1),2)*log(2) * t(Z))
-  T1 <- rweibull(n, shape = 2, scale = 1/sqrt(1/100*exp(arg_T1)))
-  
-  if(is.null(m)){ # competing risks scenarios
-    # generate type II event times
+  if(is.null(m)){
     arg_T2 <- gamma_0*A + colSums(rep(c(-1,0,0,0,1,1),2)*log(2) * t(Z))
-    T2 <- rweibull(n, shape = 2, scale = 1/sqrt(1/100*exp(arg_T2)))
+  }
+  if(method  == "ozenne" | !is.null(m)){ # latent failure time model
+    # generate type I event times
+    T1 <- rweibull(n, shape = 2, scale = 1/sqrt(1/100*exp(arg_T1)))
+    if(is.null(m)){ # competing risks scenarios
+      # generate type II event times
+      T2 <- rweibull(n, shape = 2, scale = 1/sqrt(1/100*exp(arg_T2)))
+      # generate censoring times
+      if(!cens){
+        C <- Inf
+      }else{
+        arg_C <- delta_0*A + colSums(rep(c(-1,0,0,1,0,-1),2)*log(2) * t(Z))
+        C <- rweibull(n, shape = 2, scale = 1/sqrt(1/cens_par*exp(arg_C)))
+      }
+      # save data
+      data <- data.frame(time = pmin(T1, T2, C), 
+                         event = ifelse(pmin(T1, T2, C) == T1, 1, 
+                                        ifelse(pmin(T1, T2, C) == T2, 2, 0)),
+                         A = as.factor(A),
+                         Z)
+    }else{ # standard survival scenario
+      if(!cens){ # setting without censoring
+        time <- T1
+        event <- 1
+      }else{ # setting with staggered entry & type II censoring
+        # implement staggered entry (calendar time scale)
+        entry <- runif(n, 0, min(qweibull(m/n, 2, 1/sqrt(1/100*exp(arg_T1)))))
+        # generate type II censoring times (calendar time scale)
+        c <- sort(entry + T1)[m]
+        event <- as.numeric(entry + T1 <= c)
+        # transform observed event times to study time scale
+        time <- ifelse(event == 1, T1, c - entry)
+      }
+      # save data
+      data <- data.frame(time = time,
+                         event = event,
+                         A = as.factor(A),
+                         Z)
+    }
+  }else{ # cause-specific model
+    # generate waiting times
+    time <- rweibull(n, shape = 2, scale = 10 / sqrt(exp(arg_T1) + exp(arg_T2)))
+    # generate cause
+    cause <- rbinom(n, size = 1, prob = exp(arg_T2) / (exp(arg_T1)+exp(arg_T2))) + 1
     # generate censoring times
     if(!cens){
       C <- Inf
@@ -59,27 +101,8 @@ generate_data <- function(n,
       C <- rweibull(n, shape = 2, scale = 1/sqrt(1/cens_par*exp(arg_C)))
     }
     # save data
-    data <- data.frame(time = pmin(T1, T2, C), 
-                       event = ifelse(pmin(T1, T2, C) == T1, 1, 
-                                      ifelse(pmin(T1, T2, C) == T2, 2, 0)),
-                       A = as.factor(A),
-                       Z)
-  }else{ # standard survival scenario
-    if(!cens){ # setting without censoring
-      time <- T1
-      event <- 1
-    }else{ # setting with staggered entry & type II censoring
-      # implement staggered entry (calendar time scale)
-      entry <- runif(n, 0, min(qweibull(m/n, 2, 1/sqrt(1/100*exp(arg_T1)))))
-      # generate type II censoring times (calendar time scale)
-      c <- sort(entry + T1)[m]
-      event <- as.numeric(entry + T1 <= c)
-      # transform observed event times to study time scale
-      time <- ifelse(event == 1, T1, c - entry)
-    }
-    # save data
-    data <- data.frame(time = time,
-                       event = event,
+    data <- data.frame(time = pmin(time, C), 
+                       event = ifelse(time <= C, cause, 0),
                        A = as.factor(A),
                        Z)
   }
@@ -96,9 +119,10 @@ run <- function(n,
                 alpha_0 = 0, beta_0, gamma_0 = 0, delta_0 = 0, 
                 sd_cov = 1, 
                 cens = TRUE, cens_par = 200, m = NULL,
+                method = "cs",
                 t = NULL, 
                 ATE_true, 
-                EBS_iter = 1e3, BS_iter = 1e4, 
+                EBS_iter = 1e3, BS_iter = 1e3, 
                 iter = 5000, seed = 1234, cores = detectCores()-1){
   # input:
   ## n: sample size
@@ -111,6 +135,8 @@ run <- function(n,
   ## cens_par: parameter for censoring time distribution (if m is NULL)
   ## m: in case of type II censoring: number of events to observe before censoring
   ##   is imputed (else: NULL)
+  ## method: string denoting the data generating method 
+  ##   (ozenne: latent failure time model, cs: cause-specific Cox model)
   ## t: time point(s) to evaluate
   ## ATE_true: true average treatment effect
   ## EBS_iter: number of samples to use for the EBS approach
@@ -138,13 +164,11 @@ run <- function(n,
   # create matrices to store coverages
   cov_CI_EBS <- 
     cov_CI_IF <- 
-    cov_CI_WBS_calc <- cov_CI_WBS_Lin <- cov_CI_WBS_Bey <- cov_CI_WBS_Weird <- 
+    cov_CI_WBS_Lin <- cov_CI_WBS_Bey <- cov_CI_WBS_Weird <- 
     matrix(NA, nrow=iter, ncol=length(t))
   cov_CB_EBS <- 
     cov_CB_IF <- 
-    cov_CB_WBS_Lin_calc <- cov_CB_WBS_Lin <- 
-    cov_CB_WBS_Bey_calc <- cov_CB_WBS_Bey <- 
-    cov_CB_WBS_Weird_calc <- cov_CB_WBS_Weird <- 
+    cov_CB_WBS_Lin <- cov_CB_WBS_Bey <- cov_CB_WBS_Weird <- 
     rep(NA, iter)
   
   # prepare results list
@@ -157,20 +181,16 @@ run <- function(n,
     
     try({
       
-      # generate data
+      ## generate data ####
       if(is.null(m)){ # competing risks scenarios
-        while(TRUE){ 
-          data <- generate_data(
-            n = n, 
-            alpha_0 = alpha_0, beta_0 = beta_0, 
-            gamma_0 = gamma_0, delta_0 = delta_0, 
-            sd_cov = sd_cov, 
-            cens = cens, cens_par = cens_par
-          )
-          # ensure that at least 10 events of each type are observed
-          if(min(dim(data[data$event == 1,])[1], 
-                 dim(data[data$event == 2,])[1]) >= 10) break
-        }
+        data <- generate_data(
+          n = n, 
+          alpha_0 = alpha_0, beta_0 = beta_0, 
+          gamma_0 = gamma_0, delta_0 = delta_0, 
+          sd_cov = sd_cov, 
+          cens = cens, cens_par = cens_par,
+          method = method
+        )
         # determine transition frequencies at each time point
         event_prob <- sapply(t, 
                              function(t){
@@ -194,7 +214,7 @@ run <- function(n,
       treat_prob <- sum(data$A == 1)/n
       
       
-      # perform EBS
+      ## perform EBS ####
       EBS_time <- proc.time()
       if(.Platform$OS.type == "windows"){
         cl <- makeCluster(cores)
@@ -221,19 +241,21 @@ run <- function(n,
                           data_bs[order(data_bs$time),])
                       ))
                       # calculate average treatment effect
-                      EBS(
+                      ATE(
+                        ID = order(data_bs$time),
                         Z = list(csc_bs$models$`Cause 1`$x,
                                  csc_bs$models$`Cause 2`$x),
-                        event = data_bs$event[order(data_bs$time)],
-                        time = sort(data_bs$time),
-                        t = t,
-                        beta = coefficients(csc_bs),
                         index_A = c(
                           c(which(colnames(csc_bs$models$`Cause 1`$x) == 
                                     paste0("A", levels(data$A)[2])), NA)[1],
                           c(which(colnames(csc_bs$models$`Cause 2`$x) == 
-                                    paste0("A", levels(data$A)[2])), NA)[1])
-                      )
+                                    paste0("A", levels(data$A)[2])), NA)[1]),
+                        event = data_bs$event[order(data_bs$time)],
+                        time = sort(data_bs$time),
+                        beta = coefficients(csc_bs),
+                        t = t,
+                        IF = FALSE, WBS = FALSE
+                      )$ATE
                     }, error = function(e){rep(NA, length(t))})
                   }
       }else{ # setting with staggered entry & type II censoring
@@ -253,16 +275,18 @@ run <- function(n,
                         )
                       ))
                       # calculate average treatment effect
-                      EBS(
+                      ATE(
+                        ID = order(data_bs$time),
                         Z = list(model.matrix(cox_bs)),
-                        event = data_bs$event[order(data_bs$time)],
-                        time = sort(data_bs$time),
-                        t = t,
-                        beta = list(cox_bs$coefficients),
                         index_A = c(which(colnames(model.matrix(cox_bs)) == 
                                             paste0("A", levels(data$A)[2])), 
-                                    NA)[1]
-                      )
+                                    NA)[1],
+                        event = data_bs$event[order(data_bs$time)],
+                        time = sort(data_bs$time),
+                        beta = list(cox_bs$coefficients),
+                        t = t,
+                        IF = FALSE, WBS = FALSE
+                      )$ATE
                     }, error = function(e){rep(NA, length(t))})
                   }
       }
@@ -279,41 +303,55 @@ run <- function(n,
                     length(res_EBS_t)))
       })
       # determine quantile for confidence bands
-      q_EBS_sup <- quantile(apply(abs(res_EBS - rowMeans(res_EBS, na.rm = TRUE)) / 
-                                    sqrt(apply(res_EBS, 1, var, na.rm = TRUE)), 
-                                  2, max, na.rm = TRUE), 0.95)
+      suppressWarnings(
+        q_EBS_sup <- quantile(apply(abs(res_EBS - rowMeans(res_EBS, na.rm = TRUE)) / 
+                                      sqrt(apply(res_EBS, 1, var, na.rm = TRUE)), 
+                                    2, FUN = max, na.rm = TRUE), 0.95)
+      )
       EBS_time <- ifelse(any(!is.na(unlist(lapply(CI_EBS, `[[`, 1)))), 
                          (proc.time() - EBS_time)[3]*1e3, 
                          NA)
       
       
+      ## perform IF/WBS ####
       # prepare IF/WBS
       Cox_time <- proc.time()
       if(is.null(m)){ # competing risks scenarios
         # fit cause-specific Cox models
-        csc <- CSC(formula = list(Hist(time, event) ~ 
-                                    A+z1+z2+z3+z4+z5+z6+z7+z8+z9+z10+z11+z12,
-                                  Hist(time, event) ~ 
-                                    A+z1+z2+z3+z4+z5+z6+z7+z8+z9+z10+z11+z12),
-                   data[order(data$time),])
+        invisible(capture.output(
+          csc <- CSC(formula = list(Hist(time, event) ~ 
+                                      A+z1+z2+z3+z4+z5+z6+z7+z8+z9+z10+z11+z12,
+                                    Hist(time, event) ~ 
+                                      A+z1+z2+z3+z4+z5+z6+z7+z8+z9+z10+z11+z12),
+                     data[order(data$time),])
+        ))
       }else{ # setting with staggered entry & type II censoring
         # fit Cox model
-        cox <- coxph(Surv(time, event) ~ 
-                       A+z1+z2+z3+z4+z5+z6+z7+z8+z9+z10+z11+z12,
-                     data[order(data$time),])
+        invisible(capture.output(
+          cox <- coxph(Surv(time, event) ~ 
+                         A+z1+z2+z3+z4+z5+z6+z7+z8+z9+z10+z11+z12,
+                       data[order(data$time),])
+        ))
       }
       Cox_time <- (proc.time() - Cox_time)[3]*1e3
       
       # create matrices to store average treatment effect, confidence intervals & bands
-      res_IF_WBS <- list(rep(NA, length(t)),
-                         matrix(NA, nrow=2, ncol=length(t)), 
-                         matrix(NA, nrow=2, ncol=length(t)),
-                         matrix(NA, nrow=8, ncol=length(t)), 
-                         matrix(NA, nrow=12, ncol=length(t)))
-      # perform IF/WBS
+      res_IF_Lin <- res_Bey <- res_Weird <- 
+        list(ATE = rep(NA, length(t)),
+             SE_IF = rep(NA, length(t)),
+             Un_std_IF = NULL,
+             CI_IF = matrix(NA, nrow=2, ncol=length(t)),
+             CB_IF = matrix(NA, nrow=2, ncol=length(t)), 
+             SE_WBS = rep(NA, length(t)),
+             Un_std_WBS = NULL, 
+             CI_WBS = matrix(NA, nrow=2, ncol=length(t)),
+             CB_WBS = matrix(NA, nrow=2, ncol=length(t)))
       IF_time <- NA
       WBS_time <- NA
+      
+      # perform IF/WBS
       try({
+        
         # determine number of observed (uncensored) events for multipliers
         event_num <- sum(data$event[order(data$time)] != 0)
         # compute weird bootstrap multipliers
@@ -322,78 +360,171 @@ run <- function(n,
           Y <- sum(time[data$event[order(data$time)] != 0][j] <= time)
           rbinom(BS_iter, Y, 1/Y) - 1
         })
+        
         if(is.null(m)){ # competing risks scenarios
+          
           # calculate average treatment effect, confidence intervals & bands
-          res_IF_WBS <- ATE_IF_WBS(
+          ## IF & WBS (Lin multipliers)
+          res_IF_Lin <- ATE(
+            ID = order(data$time),
             Z = list(csc$models$`Cause 1`$x,
                      csc$models$`Cause 2`$x),
-            event = data$event[order(data$time)], 
-            time = sort(data$time),
-            t = t,
-            beta = coefficients(csc),
             index_A = c(c(which(colnames(csc$models$`Cause 1`$x) == 
                                   paste0("A", levels(data$A)[2])), NA)[1],
                         c(which(colnames(csc$models$`Cause 2`$x) == 
                                   paste0("A", levels(data$A)[2])), NA)[1]),
-            bs_iter = BS_iter,
-            G_IF = rnorm(n * BS_iter),
-            G_Lin_init = rnorm(BS_iter * event_num),
-            G_Bey_init = rpois(BS_iter * event_num, 1) - 1,
-            G_Weird_init = c(t(mult_Weird))
-          )
-        }else{ # setting with staggered entry & type II censoring
-          # calculate average treatment effect, confidence intervals & bands
-          res_IF_WBS <- ATE_IF_WBS(
-            Z = list(model.matrix(cox)),
             event = data$event[order(data$time)], 
             time = sort(data$time),
+            beta = coefficients(csc),
             t = t,
-            beta = list(cox$coefficients),
+            G_IF_init = rnorm(n * BS_iter),
+            G_WBS_init = rnorm(BS_iter * event_num),
+            bs_iter = BS_iter)
+          IF_time <- unname(
+            Cox_time + sum(clock$timer[clock$ticker %in% c("ATE","IF")]/1e6)
+          )
+          WBS_time <- unname(
+            Cox_time + sum(clock$timer[clock$ticker %in% c("ATE","WBS")]/1e6)
+          )
+          ## WBS (Beyersmann multipliers)
+          res_Bey <- ATE(
+            ID = order(data$time),
+            Z = list(csc$models$`Cause 1`$x,
+                     csc$models$`Cause 2`$x),
+            index_A = c(c(which(colnames(csc$models$`Cause 1`$x) == 
+                                  paste0("A", levels(data$A)[2])), NA)[1],
+                        c(which(colnames(csc$models$`Cause 2`$x) == 
+                                  paste0("A", levels(data$A)[2])), NA)[1]),
+            event = data$event[order(data$time)], 
+            time = sort(data$time),
+            beta = coefficients(csc),
+            t = t,
+            IF = FALSE,
+            G_WBS_init = rpois(BS_iter * event_num, 1) - 1,
+            bs_iter = BS_iter)
+          ## WBS (weird multipliers)
+          res_Weird <- ATE(
+            ID = order(data$time),
+            Z = list(csc$models$`Cause 1`$x,
+                     csc$models$`Cause 2`$x),
+            index_A = c(c(which(colnames(csc$models$`Cause 1`$x) == 
+                                  paste0("A", levels(data$A)[2])), NA)[1],
+                        c(which(colnames(csc$models$`Cause 2`$x) == 
+                                  paste0("A", levels(data$A)[2])), NA)[1]),
+            event = data$event[order(data$time)], 
+            time = sort(data$time),
+            beta = coefficients(csc),
+            t = t,
+            IF = FALSE,
+            G_WBS_init = c(t(mult_Weird)),
+            bs_iter = BS_iter)
+          
+        }else{ # setting with staggered entry & type II censoring
+          
+          # calculate average treatment effect, confidence intervals & bands
+          ## IF & WBS (Lin multipliers)
+          res_IF_Lin <- ATE(
+            ID = order(data$time),
+            Z = list(model.matrix(cox)),
             index_A = c(which(colnames(model.matrix(cox)) == 
                                 paste0("A", levels(data$A)[2])), NA)[1],
-            bs_iter = BS_iter,
-            G_IF = rnorm(n * BS_iter),
-            G_Lin_init = rnorm(BS_iter * event_num),
-            G_Bey_init = rpois(BS_iter * event_num, 1) - 1,
-            G_Weird_init = c(t(mult_Weird))
+            event = data$event[order(data$time)], 
+            time = sort(data$time),
+            beta = list(cox$coefficients),
+            t = t,
+            G_IF_init = rnorm(n * BS_iter),
+            G_WBS_init = rnorm(BS_iter * event_num),
+            bs_iter = BS_iter)
+          IF_time <- unname(
+            Cox_time + sum(clock$timer[clock$ticker %in% c("ATE","IF")]/1e6)
           )
+          WBS_time <- unname(
+            Cox_time + sum(clock$timer[clock$ticker %in% c("ATE","WBS")]/1e6)
+          )
+          ## WBS (Beyersmann multipliers)
+          res_Bey <- ATE(
+            ID = order(data$time),
+            Z = list(model.matrix(cox)),
+            index_A = c(which(colnames(model.matrix(cox)) == 
+                                paste0("A", levels(data$A)[2])), NA)[1],
+            event = data$event[order(data$time)], 
+            time = sort(data$time),
+            beta = list(cox$coefficients),
+            t = t,
+            IF = FALSE,
+            G_WBS_init = rpois(BS_iter * event_num, 1) - 1,
+            bs_iter = BS_iter)
+          ## WBS (weird multipliers)
+          res_Weird <- ATE(
+            ID = order(data$time),
+            Z = list(model.matrix(cox)),
+            index_A = c(which(colnames(model.matrix(cox)) == 
+                                paste0("A", levels(data$A)[2])), NA)[1],
+            event = data$event[order(data$time)], 
+            time = sort(data$time),
+            beta = list(cox$coefficients),
+            t = t,
+            IF = FALSE,
+            G_WBS_init = c(t(mult_Weird)),
+            bs_iter = BS_iter)
+          
         }
-        IF_time <- unname(
-          Cox_time + sum(clock$timer[clock$ticker %in% c("ATE","IF")]/1e6)
-        )
-        WBS_time <- unname(
-          Cox_time + sum(clock$timer[clock$ticker %in% c("ATE","WBS")]/1e6)
-        )
+        
       }, silent = TRUE)
       
-      
+      ## store results ####
       # store confidence intervals
       CI <- rbind(matrix(unlist(lapply(CI_EBS, `[[`, 1)), nrow=2),
-                  res_IF_WBS[[2]],
-                  res_IF_WBS[[4]])
+                  res_IF_Lin$CI_IF,
+                  res_IF_Lin$CI_WBS,
+                  res_Bey$CI_WBS,
+                  res_Weird$CI_WBS)
       row.names(CI) <- c(
         "EBS (lower)", "EBS (upper)",
         "IF (lower)", "IF (upper)",
-        "WBS - calculated (lower)", "WBS - calculated (upper)",
         "WBS - Lin (lower)", "WBS - Lin (upper)",
         "WBS - Beyersmann (lower)", "WBS - Beyersmann (upper)",
         "WBS - Weird (lower)", "WBS - Weird (upper)"
       )
       # store confidence bands
-      CB <- rbind(pmax(as.numeric(res_IF_WBS[[1]]) - 
+      ATE_calc <- rep(NA, length(t))
+      if(is.null(m)){
+        ATE_calc <- ATE(ID = order(data$time),
+                        Z = list(csc$models$`Cause 1`$x,
+                                 csc$models$`Cause 2`$x),
+                        index_A = c(c(which(colnames(csc$models$`Cause 1`$x) == 
+                                              paste0("A", levels(data$A)[2])), NA)[1],
+                                    c(which(colnames(csc$models$`Cause 2`$x) == 
+                                              paste0("A", levels(data$A)[2])), NA)[1]),
+                        event = data$event[order(data$time)], 
+                        time = sort(data$time),
+                        beta = coefficients(csc),
+                        t = t,
+                        IF = FALSE, WBS = FALSE)$ATE
+      }else{
+        ATE_calc <- ATE(ID = order(data$time),
+                        Z = list(model.matrix(cox)),
+                        index_A = c(which(colnames(model.matrix(cox)) == 
+                                            paste0("A", levels(data$A)[2])), NA)[1],
+                        event = data$event[order(data$time)], 
+                        time = sort(data$time),
+                        beta = list(cox$coefficients),
+                        t = t,
+                        IF = FALSE, WBS = FALSE)$ATE
+      }
+      CB <- rbind(pmax(as.numeric(ATE_calc) - 
                          q_EBS_sup * apply(res_EBS, 1, sd, na.rm = TRUE), -1), 
-                  pmin(as.numeric(res_IF_WBS[[1]]) + 
+                  pmin(as.numeric(ATE_calc) + 
                          q_EBS_sup * apply(res_EBS, 1, sd, na.rm = TRUE), 1),
-                  res_IF_WBS[[3]],
-                  res_IF_WBS[[5]])
+                  res_IF_Lin$CB_IF,
+                  res_IF_Lin$CB_WBS,
+                  res_Bey$CB_WBS,
+                  res_Weird$CB_WBS)
       row.names(CB) <- c(
         "EBS (lower)", "EBS (upper)",
         "IF (lower)", "IF (upper)",
-        "WBS - Lin calculated (lower)", "WBS - Lin calculated (upper)",
         "WBS - Lin (lower)", "WBS - Lin (upper)",
-        "WBS - Beyersmann calculated (lower)", "WBS - Beyersmann calculated (upper)",
         "WBS - Beyersmann (lower)", "WBS - Beyersmann (upper)",
-        "WBS - Weird calculated (lower)", "WBS - Weird calculated (upper)",
         "WBS - Weird (lower)", "WBS - Weird (upper)"
       )
       colnames(CI) <- colnames(CB) <- paste0("t = ", t)
@@ -410,18 +541,14 @@ run <- function(n,
       # store coverage probabilities
       cov_CI_EBS[i,] <- CI[1,] <= ATE_true & ATE_true <= CI[2,]
       cov_CI_IF[i,] <- CI[3,] <= ATE_true & ATE_true <= CI[4,]
-      cov_CI_WBS_calc[i,] <- CI[5,] <= ATE_true & ATE_true <= CI[6,]
-      cov_CI_WBS_Lin[i,] <- CI[7,] <= ATE_true & ATE_true <= CI[8,]
-      cov_CI_WBS_Bey[i,] <- CI[9,] <= ATE_true & ATE_true <= CI[10,]
-      cov_CI_WBS_Weird[i,] <- CI[11,] <= ATE_true & ATE_true <= CI[12,]
+      cov_CI_WBS_Lin[i,] <- CI[5,] <= ATE_true & ATE_true <= CI[6,]
+      cov_CI_WBS_Bey[i,] <- CI[7,] <= ATE_true & ATE_true <= CI[8,]
+      cov_CI_WBS_Weird[i,] <- CI[9,] <= ATE_true & ATE_true <= CI[10,]
       cov_CB_EBS[i] <- all(CB[1,] <= ATE_true & ATE_true <= CB[2,])
       cov_CB_IF[i] <- all(CB[3,] <= ATE_true & ATE_true <= CB[4,])
-      cov_CB_WBS_Lin_calc[i] <- all(CB[5,] <= ATE_true & ATE_true <= CB[6,])
-      cov_CB_WBS_Lin[i] <- all(CB[7,] <= ATE_true & ATE_true <= CB[8,])
-      cov_CB_WBS_Bey_calc[i] <- all(CB[9,] <= ATE_true & ATE_true <= CB[10,])
-      cov_CB_WBS_Bey[i] <- all(CB[11,] <= ATE_true & ATE_true <= CB[12,])
-      cov_CB_WBS_Weird_calc[i] <- all(CB[13,] <= ATE_true & ATE_true <= CB[14,])
-      cov_CB_WBS_Weird[i] <- all(CB[15,] <= ATE_true & ATE_true <= CB[16,])
+      cov_CB_WBS_Lin[i] <- all(CB[5,] <= ATE_true & ATE_true <= CB[6,])
+      cov_CB_WBS_Bey[i] <- all(CB[7,] <= ATE_true & ATE_true <= CB[8,])
+      cov_CB_WBS_Weird[i] <- all(CB[9,] <= ATE_true & ATE_true <= CB[10,])
       
     })
     
@@ -429,7 +556,7 @@ run <- function(n,
     
   }
   
-  # summarize & save results
+  ## summarize & save results ####
   return(list(
     # sample size
     n = n,
@@ -475,12 +602,28 @@ run <- function(n,
                   function(i){
                     if(length(i) > 1){i[[4]]}else{NA}
                   }), na.rm=TRUE),
-    # average number of valid EBS samples
-    mean_EBS_valid = 
+    # average number of invalid EBS samples
+    mean_EBS_samples_invalid = 
+      rep(EBS_iter, length(t)) - 
       rowMeans(sapply(res, 
                       function(i){
                         if(length(i) > 1){i[[5]]}else{rep(NA, length(t))}
                       }), na.rm = TRUE),
+    # number of invalid confidence regions
+    CIs_invalid = matrix(rowSums(sapply(res, 
+                                        function(i){
+                                          if(length(i) > 1){
+                                            is.na(i[[1]][seq(1,9,2),])
+                                          }else{
+                                            rep(TRUE, 25)
+                                          }
+                                        })), nrow=5,
+                         dimnames=list(c("EBS",
+                                         "IF",
+                                         "WBS - Lin",
+                                         "WBS - Beyersmann",
+                                         "WBS - Weird"), 
+                                       paste0("t = ", t))),
     # average computation times
     mean_time = 
       rowMeans(sapply(res, 
@@ -492,14 +635,13 @@ run <- function(n,
       matrix(rowMeans(sapply(res, 
                              function(i){
                                if(length(i) > 1){
-                                 i[[1]][seq(2,12,2),] - i[[1]][seq(1,11,2),]
+                                 i[[1]][seq(2,10,2),] - i[[1]][seq(1,9,2),]
                                }else{
-                                 rep(NA, 30)
+                                 rep(NA, 25)
                                }
                              }), na.rm = TRUE), 
-             nrow=6, dimnames=list(c("EBS",
+             nrow=5, dimnames=list(c("EBS",
                                      "IF",
-                                     "WBS - calculated",
                                      "WBS - Lin",
                                      "WBS - Beyersmann",
                                      "WBS - Weird"), 
@@ -509,31 +651,26 @@ run <- function(n,
       matrix(rowMeans(sapply(res, 
                              function(i){
                                if(length(i) > 1){
-                                 i[[2]][seq(2,16,2),] - i[[2]][seq(1,15,2),]
+                                 i[[2]][seq(2,10,2),] - i[[2]][seq(1,9,2),]
                                }else{
-                                 rep(NA, 40)
+                                 rep(NA, 25)
                                }
                              }), na.rm = TRUE), 
-             nrow=8, dimnames=list(c("EBS",
+             nrow=5, dimnames=list(c("EBS",
                                      "IF",
-                                     "WBS - Lin calculated",
                                      "WBS - Lin",
-                                     "WBS - Beyersmann calculated",
                                      "WBS - Beyersmann",
-                                     "WBS - Weird calculated",
                                      "WBS - Weird"), 
                                    paste0("t = ", t))),
     # confidence interval coverage probabilities
     coverage_CI = matrix(100*c(colMeans(cov_CI_EBS, na.rm = TRUE), 
                                colMeans(cov_CI_IF, na.rm = TRUE), 
-                               colMeans(cov_CI_WBS_calc, na.rm = TRUE), 
                                colMeans(cov_CI_WBS_Lin, na.rm = TRUE), 
                                colMeans(cov_CI_WBS_Bey, na.rm = TRUE), 
                                colMeans(cov_CI_WBS_Weird, na.rm = TRUE)), 
-                         byrow=TRUE, nrow=6, 
+                         byrow=TRUE, nrow=5, 
                          dimnames=list(c("EBS",
                                          "IF",
-                                         "WBS - calculated",
                                          "WBS - Lin",
                                          "WBS - Beyersmann",
                                          "WBS - Weird"), 
@@ -541,16 +678,10 @@ run <- function(n,
     # confidence band coverage probabilities
     coverage_CB = 100*c("EBS" = mean(cov_CB_EBS, na.rm = TRUE),
                         "IF" = mean(cov_CB_IF, na.rm = TRUE), 
-                        "WBS - Lin calculated" = 
-                          mean(cov_CB_WBS_Lin_calc, na.rm = TRUE), 
                         "WBS - Lin" = 
                           mean(cov_CB_WBS_Lin, na.rm = TRUE), 
-                        "WBS - Beyersmann calculated" = 
-                          mean(cov_CB_WBS_Bey_calc, na.rm = TRUE), 
                         "WBS - Beyersmann" = 
                           mean(cov_CB_WBS_Bey, na.rm = TRUE), 
-                        "WBS - Weird calculated" = 
-                          mean(cov_CB_WBS_Weird_calc, na.rm = TRUE),
                         "WBS - Weird" = 
                           mean(cov_CB_WBS_Weird, na.rm = TRUE))
   ))
@@ -593,10 +724,8 @@ plot_coverage_CI_t <- function(scenario, effect, t, ylim){
   ggplot(data = total_coverage_CI[
     total_coverage_CI$scenario == scenario & 
       total_coverage_CI$effect == effect & 
-      total_coverage_CI$t == t & 
-      total_coverage_CI$type != "WBS (calculated)",
-  ], 
-  aes(x = n, y = coverage)) +
+      total_coverage_CI$t == t,], 
+    aes(x = n, y = coverage)) +
     geom_hline(aes(yintercept = 95)) +
     geom_line(aes(color = type), linewidth=1.1) +
     geom_point(aes(color = type), size=2) +
@@ -635,8 +764,7 @@ plot_coverage_CI <- function(scenario, effect){
   
   # determine common limit of the y axis
   ylim <- total_coverage_CI[total_coverage_CI$scenario == scenario & 
-                              total_coverage_CI$effect == effect & 
-                              total_coverage_CI$type != "WBS (calculated)",
+                              total_coverage_CI$effect == effect,
                             "coverage"]
   ylim <- c(floor(min(ylim)*10)/10, ceiling(max(ylim)*10)/10)
   ylim <- c(pmin(95, ylim[1]), pmax(95, ylim[2]))
@@ -682,11 +810,7 @@ plot_coverage_CB <- function(scenario, effect){
   
   # determine y axis breaks
   ylim <- total_coverage_CB[total_coverage_CB$scenario == scenario & 
-                              total_coverage_CB$effect == effect & 
-                              !(total_coverage_CB$type %in% 
-                                  c("WBS - Lin et al. (calculated)",
-                                    "WBS - Beyersmann et al. (calculated)",
-                                    "WBS - Weird bootstrap (calculated)")),
+                              total_coverage_CB$effect == effect,
                             "coverage"]
   ylim <- c(floor(min(ylim)*10)/10, ceiling(max(ylim)*10)/10)
   ylim <- c(pmin(95, ylim[1]), pmax(95, ylim[2]))
@@ -708,11 +832,7 @@ plot_coverage_CB <- function(scenario, effect){
   # create plot
   ggplot(data = total_coverage_CB[
     total_coverage_CB$scenario == scenario & 
-      total_coverage_CB$effect == effect & 
-      !(total_coverage_CB$type %in% 
-          c("WBS - Lin et al. (calculated)",
-            "WBS - Beyersmann et al. (calculated)",
-            "WBS - Weird bootstrap (calculated)")),
+      total_coverage_CB$effect == effect,
   ], 
   aes(x = n, y = coverage)) +
     geom_hline(aes(yintercept = 95)) +
@@ -776,7 +896,6 @@ plot_width_t <- function(scenario, effect, type, t){
           n = n, 
           type = factor(rep(c("EBS",
                               "IF",
-                              "WBS (calculated)",
                               "WBS - Lin et al.",
                               "WBS - Beyersmann et al.",
                               "WBS - Weird bootstrap"), 
@@ -794,12 +913,12 @@ plot_width_t <- function(scenario, effect, type, t){
           )), 
           function(i){
             if(length(i) > 1){
-              i[[1]][seq(2,12,2),
+              i[[1]][seq(2,10,2),
                      which(as.character(t) == all_t)] - 
-                i[[1]][seq(1,11,2),
+                i[[1]][seq(1,9,2),
                        which(as.character(t) == all_t)]
             }else{
-              rep(NA, 6)
+              rep(NA, 5)
             }
           }
           )))
@@ -814,11 +933,8 @@ plot_width_t <- function(scenario, effect, type, t){
           n = n, 
           type = factor(rep(c("EBS", 
                               "IF",
-                              "WBS - Lin et al. (calculated)",
                               "WBS - Lin et al.",
-                              "WBS - Beyersmann et al. (calculated)",
                               "WBS - Beyersmann et al.",
-                              "WBS - Weird bootstrap (calculated)",
                               "WBS - Weird bootstrap"), 
                             5000), 
                         levels = c("EBS", 
@@ -834,12 +950,12 @@ plot_width_t <- function(scenario, effect, type, t){
           )), 
           function(i){
             if(length(i) > 1){
-              i[[2]][seq(2,16,2),
+              i[[2]][seq(2,10,2),
                      which(as.character(t) == all_t)] - 
-                i[[2]][seq(1,15,2),
+                i[[2]][seq(1,9,2),
                        which(as.character(t) == all_t)]
             }else{
-              rep(NA, 8)
+              rep(NA, 5)
             }
           }
           )))
@@ -847,40 +963,37 @@ plot_width_t <- function(scenario, effect, type, t){
       )
     }
   }
-  data <- data[!is.na(data$type),]
   # identify mild & extreme outliers
+  mean_val <- aggregate(width ~ n + type, data, mean)
   q1 <- aggregate(width ~ n + type, data, quantile, 0.25)
   q3 <- aggregate(width ~ n + type, data, quantile, 0.75)
-  outliers <- data.frame(
-    n = q1$n,
-    type = q1$type,
-    whisker_low = q1$width - 1.5 * (q3$width - q1$width),
-    whisker_up = q3$width + 1.5 * (q3$width - q1$width),
-    extreme_outlier_low = q1$width - 3 * (q3$width - q1$width),
-    extreme_outlier_up = q3$width + 3 * (q3$width - q1$width)
-  )
-  data <- merge(data, outliers, by = c("n", "type"), all.x = TRUE)
-  data$outlier <- ifelse(data$width < data$whisker_low | 
-                           data$width > data$whisker_up, 
-                         "mild", NA)
-  data$outlier <- ifelse(data$width < data$extreme_outlier_low | 
-                           data$width > data$extreme_outlier_up,
-                         "extreme", data$outlier)
-  data$outlier <- factor(data$outlier, levels = c("mild","extreme"))
+  sum <- merge(merge(mean_val, q1, by = c("n","type")), q3, by = c("n","type"))
+  colnames(sum)[3:5] <- c("mean","q1","q3")
+  sum$whisker_low <- sum$q1 - 1.5 * (sum$q3 - sum$q1)
+  sum$whisker_up <- sum$q3 + 1.5 * (sum$q3 - sum$q1)
+  
+  outliers <- merge(data, sum[,c("n","type","q1","q3","whisker_low","whisker_up")], 
+                    by = c("n","type"))
+  outliers <- outliers[(outliers$width < outliers$whisker_low | 
+                          outliers$width > outliers$whisker_up) & 
+                         !is.na(outliers$width),]
+  outliers$extreme_outlier_low <- outliers$q1 - 3 * (outliers$q3 - outliers$q1)
+  outliers$extreme_outlier_up <- outliers$q3 + 3 * (outliers$q3 - outliers$q1)
+  outliers$outlier <- ifelse(outliers$width < outliers$whisker_low | 
+                               outliers$width > outliers$whisker_up, 
+                             "mild", NA)
+  outliers$outlier <- ifelse(outliers$width < outliers$extreme_outlier_low | 
+                               outliers$width > outliers$extreme_outlier_up,
+                             "extreme", outliers$outlier)
+  outliers$outlier <- factor(outliers$outlier, levels = c("mild","extreme"))
   
   # create plot
-  ggplot(data = rbind(data, 
-                      c(125, rep(NA, 7)), 
-                      c(150, rep(NA, 7)), 
-                      c(175, rep(NA, 7)),
-                      c(225, rep(NA, 7)),
-                      c(250, rep(NA, 7)),
-                      c(275, rep(NA, 7))), 
-         aes(x = factor(n), y = width, fill = type)) + 
-    stat_boxplot(geom="errorbar", position="dodge") +
-    geom_boxplot(position="dodge", outlier.shape = NA) + 
-    geom_point(aes(col = outlier, group = type), size = 0.5, 
-               position = position_dodge(width=0.75), show.legend = FALSE) + 
+  ggplot(data = sum, aes(x = factor(n), fill = type)) + 
+    geom_errorbar(aes(ymin = whisker_low, ymax = whisker_up), position = "dodge") +
+    geom_boxplot(aes(ymin = whisker_low, lower = q1, middle = mean, upper = q3, ymax = whisker_up),
+                 stat = "identity", position = "dodge", outlier.shape = NA) + 
+    geom_point(data = outliers, aes(x = factor(n), y = width, col = outlier, group = type), 
+               size = 0.5, position = position_dodge(width=0.9), show.legend = FALSE) + 
     scale_fill_manual("", values = c('orange','red','turquoise4','cyan3','chartreuse2'),
                       breaks = c("EBS","IF","WBS - Lin et al.","WBS - Beyersmann et al.","WBS - Weird bootstrap")) +
     scale_color_manual("", values = c("black","gray50"), na.translate = FALSE) + 
@@ -934,44 +1047,40 @@ plot_computation_times <- function(scenario, effect){
         function(i){if(length(i) > 1){i[[6]]/1000}else{rep(NA, 3)}})))
       ))
   }
-  data <- data[!is.na(data$type) & !is.na(data$time),]
   # identify mild & extreme outliers
+  mean_val <- aggregate(time ~ n + type, data, mean)
   q1 <- aggregate(time ~ n + type, data, quantile, 0.25)
   q3 <- aggregate(time ~ n + type, data, quantile, 0.75)
-  mean_val <- aggregate(time ~ n + type, data, mean)
-  outliers <- data.frame(
-    n = q1$n,
-    type = q1$type,
-    mean = mean_val$time,
-    whisker_low = q1$time - 1.5 * (q3$time - q1$time),
-    whisker_up = q3$time + 1.5 * (q3$time - q1$time),
-    extreme_outlier_low = q1$time - 3 * (q3$time - q1$time),
-    extreme_outlier_up = q3$time + 3 * (q3$time - q1$time)
-  )
-  data <- merge(data, outliers, by = c("n", "type"), all.x = TRUE)
-  data$outlier <- ifelse(data$time < data$whisker_low | 
-                           data$time > data$whisker_up, 
-                         "mild", NA)
-  data$outlier <- ifelse(data$time < data$extreme_outlier_low | 
-                           data$time > data$extreme_outlier_up,
-                         "extreme", data$outlier)
-  data$outlier <- factor(data$outlier, levels = c("mild","extreme"))
+  sum <- merge(merge(mean_val, q1, by = c("n","type")), q3, by = c("n","type"))
+  colnames(sum)[3:5] <- c("mean","q1","q3")
+  sum$whisker_low <- sum$q1 - 1.5 * (sum$q3 - sum$q1)
+  sum$whisker_up <- sum$q3 + 1.5 * (sum$q3 - sum$q1)
+  
+  outliers <- merge(data, sum[,c("n","type","q1","q3","whisker_low","whisker_up")], 
+                    by = c("n","type"))
+  outliers <- outliers[(outliers$time < outliers$whisker_low | 
+                          outliers$time > outliers$whisker_up) & 
+                         !is.na(outliers$time),]
+  outliers$extreme_outlier_low <- outliers$q1 - 3 * (outliers$q3 - outliers$q1)
+  outliers$extreme_outlier_up <- outliers$q3 + 3 * (outliers$q3 - outliers$q1)
+  outliers$outlier <- ifelse(outliers$time < outliers$whisker_low | 
+                               outliers$time > outliers$whisker_up, 
+                             "mild", NA)
+  outliers$outlier <- ifelse(outliers$time < outliers$extreme_outlier_low | 
+                               outliers$time > outliers$extreme_outlier_up,
+                             "extreme", outliers$outlier)
+  outliers$outlier <- factor(outliers$outlier, levels = c("mild","extreme"))
   
   # create plot
-  ggplot(data = rbind(data, 
-                      c(125, rep(NA, 8)), 
-                      c(150, rep(NA, 8)), 
-                      c(175, rep(NA, 8)),
-                      c(225, rep(NA, 8)),
-                      c(250, rep(NA, 8)),
-                      c(275, rep(NA, 8))), 
-         aes(x = factor(n), y = time, fill = type)) +
+  ggplot(data = sum, aes(x = factor(n), fill = type)) + 
     geom_bar(aes(y = mean), stat = "identity", position = position_dodge(width=0.9)) + 
-    stat_boxplot(geom="errorbar", width = 0.5, position = position_dodge(width=0.9)) +
-    geom_boxplot(width = 0.5, position = position_dodge(width=0.9), 
+    geom_errorbar(aes(ymin = whisker_low, ymax = whisker_up), 
+                  width = 0.5, position = position_dodge(width=0.9)) +
+    geom_boxplot(aes(ymin = whisker_low, lower = q1, middle = mean, upper = q3, ymax = whisker_up),
+                 stat = "identity", width = 0.5, position = position_dodge(width=0.9), 
                  outlier.shape = NA, show.legend = FALSE) + 
-    geom_point(aes(col = outlier, group = type), size = 1, 
-               position = position_dodge(width=0.9), show.legend = FALSE) + 
+    geom_point(data = outliers, aes(x = factor(n), y = time, col = outlier, group = type), 
+               size = 1, position = position_dodge(width=0.9), show.legend = FALSE) + 
     scale_fill_manual("", values = c('orange','red','turquoise'), 
                       na.translate = F) +
     scale_color_manual("", values = c("black","gray50"), na.translate = FALSE) + 
@@ -982,7 +1091,7 @@ plot_computation_times <- function(scenario, effect){
          x = "n", y = "time [s]") +
     scale_x_discrete(breaks = c(50,75,100,200,300)) +
     theme(text = element_text(size=15),
-          plot.title = element_text(hjust=0.5, face="bold"),
+          plot.title = element_text(hjust=0.5),
           axis.title.x = element_text(vjust=-0.5),
           axis.text.x = element_text(angle=90, vjust=0.5),
           panel.grid.minor = element_line(colour=NA),
