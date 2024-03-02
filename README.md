@@ -5,20 +5,20 @@ by Rühl, J. and Friedrich, S.:
 - ./Results/ \
   A folder containing (interim) results of the simulations (Section 4 in the manuscript).
   
-     ATE_true.Rda \
-       An Rda file containing results for the true average treatment effect considered in the simulations. \
-       This file is produced by l. 22-88 in the R script 'simu_masterscript.R'. 
+  - ATE_true.Rda \
+    An Rda file containing results for the true average treatment effect considered in the simulations. \
+    This file is produced by l. 22-88 in the R script 'simu_masterscript.R'. 
 
-     res_[effect]ATE_[scenario]_n[n].Rda \
-       (effect: adv/no/-, \
-        scenario: noCens/lowCens/highCens/lowTreatProb/highTreatProb/lowVarCov/highVarCov/typeII, \
-        n: 50/75/100/200/300) \
-       Rda files containing results that summarize the outcomes of the simulations for each scenario. \
-       These files are produced by l. 100-150 in the R script 'simu_masterscript.R'.  
+  - res_[effect]ATE_[scenario]_n[n].Rda \
+    (effect: adv/no/-, \
+     scenario: noCens/lowCens/highCens/lowTreatProb/highTreatProb/lowVarCov/highVarCov/typeII, \
+     n: 50/75/100/200/300) \
+     Rda files containing results that summarize the outcomes of the simulations for each scenario. \
+     These files are produced by l. 100-150 in the R script 'simu_masterscript.R'.  
 
-     total_coverages.Rda \
-       An Rda file containing results for the coverages of the simulated confidence intervals and bands. \
-       This file is produced by l. 158-244 in the R script 'simu_masterscript.R'.
+  - total_coverages.Rda \
+    An Rda file containing results for the coverages of the simulated confidence intervals and bands. \
+    This file is produced by l. 158-244 in the R script 'simu_masterscript.R'.
 
 - ./ATESurvival_1.0.tar.gz \
   An R package for the derivation of confidence intervals and bands for the average treatment effect for survival data using the classical bootstrap, an 
