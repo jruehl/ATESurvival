@@ -1,9 +1,9 @@
 This repository includes the following folders and files corresponding to the manuscript "Resampling-based confidence intervals and bands for the average treatment effect in observational studies with competing risks" by Rühl, J. and Friedrich, S.:
 
-./Results/
+- ./Results/
   A folder containing (interim) results of the simulations (Section 4 in the manuscript).
   
-     ATE_true.Rda
+     ATE_true.Rda \
        An Rda file containing results for the true average treatment effect considered in the simulations.
        This file is produced by l. 22-88 in the R script 'simu_masterscript.R'. 
 
@@ -14,25 +14,25 @@ This repository includes the following folders and files corresponding to the ma
        Rda files containing results that summarize the outcomes of the simulations for each scenario.
        These files are produced by l. 100-150 in the R script 'simu_masterscript.R'.  
 
-     total_coverages.Rda
+     total_coverages.Rda \
        An Rda file containing results for the coverages of the simulated confidence intervals and bands.
        This file is produced by l. 158-244 in the R script 'simu_masterscript.R'.
 
-./ATESurvival_1.0.tar.gz
+- ./ATESurvival_1.0.tar.gz \
   An R package for the derivation of confidence intervals and bands for the average treatment effect for survival data using the classical bootstrap, an 
   influence function approach and the wild bootstrap.
   To install the package, use the following command:
   install.packages("ATESurvival_1.0.tar.gz", repos = NULL, source = TRUE) 
   Note that on Windows systems, Rtools is required (see https://cran.r-project.org/bin/windows/Rtools/rtools43/rtools.html).
 
-./hd_analysis.R
+- ./hd_analysis.R
   An R script that performs the analysis of the hd data reported in the manuscript, reproducing Table 3 and Figure 8.
 
-./simu_functions.R
+- ./simu_functions.R \
   An R script that defines the functions used for the simulations reported in the manuscript. 
   The R script 'simu_masterscript.R' is based on these functions.
 
-./simu_masterscript.R
+- ./simu_masterscript.R \
   An R script that performs the simulations reported in the manuscript, reproducing Figures 1 - 7. 
   The simulations were run in parallel on a Linux server with 16 cores.
   Replication on a Windows system occasionally yielded slightly different confidence intervals/bands, but the differences should be neglegible.
