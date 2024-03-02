@@ -63,39 +63,39 @@ attached base packages: \
 [8] base
 
 other attached packages: \
- [1] patchwork_1.1.2           ggplot2_3.4.1            
- [3] ATESurvival_1.0           doRNG_1.8.2              
- [5] rngtools_1.5.2            doParallel_1.0.17        
- [7] iterators_1.0.14          foreach_1.5.2            
- [9] survival_3.5-5            prodlim_2019.11.13       
+ [1] patchwork_1.1.2           ggplot2_3.4.1 \
+ [3] ATESurvival_1.0           doRNG_1.8.2 \
+ [5] rngtools_1.5.2            doParallel_1.0.17 \
+ [7] iterators_1.0.14          foreach_1.5.2 \
+ [9] survival_3.5-5            prodlim_2019.11.13 \
 [11] riskRegression_2023.03.22
 
 loaded via a namespace (and not attached): \
- [1] splines_4.1.2       Formula_1.2-4       latticeExtra_0.6-30
- [4] globals_0.16.2      timereg_2.0.4       numDeriv_2016.8-1.1
- [7] pillar_1.9.0        backports_1.4.1     lattice_0.20-45    
-[10] quantreg_5.94       glue_1.6.2          digest_0.6.31      
-[13] RColorBrewer_1.1-3  checkmate_2.1.0     colorspace_2.0-3   
-[16] sandwich_3.0-2      cmprsk_2.2-11       rms_6.3-0          
-[19] htmltools_0.5.5     Matrix_1.5-3        pkgconfig_2.0.3    
-[22] SparseM_1.81        listenv_0.8.0       mvtnorm_1.2-3      
-[25] scales_1.2.1        jpeg_0.1-10         lava_1.7.0         
-[28] MatrixModels_0.5-1  htmlTable_2.4.1     tibble_3.2.1       
-[31] mets_1.3.1          generics_0.1.3      withr_2.5.0        
-[34] TH.data_1.1-2       nnet_7.3-18         cli_3.6.1          
-[37] magrittr_2.0.3      deldir_1.0-6        polspline_1.1.22   
-[40] future_1.33.0       fansi_1.0.3         parallelly_1.36.0  
-[43] nlme_3.1-160        MASS_7.3-58.1       foreign_0.8-83     
-[46] tools_4.1.2         data.table_1.14.6   lifecycle_1.0.3    
-[49] multcomp_1.4-20     stringr_1.5.0       interp_1.1-3       
-[52] munsell_0.5.0       cluster_2.1.4       compiler_4.1.2     
-[55] rlang_1.1.1         grid_4.1.2          rstudioapi_0.14    
-[58] htmlwidgets_1.5.4   base64enc_0.1-3     gtable_0.3.1       
-[61] codetools_0.2-18    R6_2.5.1            gridExtra_2.3      
-[64] zoo_1.8-11          knitr_1.44          dplyr_1.1.3        
-[67] fastmap_1.1.1       future.apply_1.10.0 utf8_1.2.2         
-[70] Hmisc_4.7-2         stringi_1.7.12      Rcpp_1.0.11        
-[73] vctrs_0.6.3         rpart_4.1.19        png_0.1-8          
+ [1] splines_4.1.2       Formula_1.2-4       latticeExtra_0.6-30 \
+ [4] globals_0.16.2      timereg_2.0.4       numDeriv_2016.8-1.1 \
+ [7] pillar_1.9.0        backports_1.4.1     lattice_0.20-45 \
+[10] quantreg_5.94       glue_1.6.2          digest_0.6.31 \
+[13] RColorBrewer_1.1-3  checkmate_2.1.0     colorspace_2.0-3 \
+[16] sandwich_3.0-2      cmprsk_2.2-11       rms_6.3-0 \
+[19] htmltools_0.5.5     Matrix_1.5-3        pkgconfig_2.0.3 \
+[22] SparseM_1.81        listenv_0.8.0       mvtnorm_1.2-3 \
+[25] scales_1.2.1        jpeg_0.1-10         lava_1.7.0 \
+[28] MatrixModels_0.5-1  htmlTable_2.4.1     tibble_3.2.1 \
+[31] mets_1.3.1          generics_0.1.3      withr_2.5.0 \
+[34] TH.data_1.1-2       nnet_7.3-18         cli_3.6.1 \
+[37] magrittr_2.0.3      deldir_1.0-6        polspline_1.1.22 \
+[40] future_1.33.0       fansi_1.0.3         parallelly_1.36.0 \
+[43] nlme_3.1-160        MASS_7.3-58.1       foreign_0.8-83 \
+[46] tools_4.1.2         data.table_1.14.6   lifecycle_1.0.3 \
+[49] multcomp_1.4-20     stringr_1.5.0       interp_1.1-3 \
+[52] munsell_0.5.0       cluster_2.1.4       compiler_4.1.2 \
+[55] rlang_1.1.1         grid_4.1.2          rstudioapi_0.14 \
+[58] htmlwidgets_1.5.4   base64enc_0.1-3     gtable_0.3.1 \
+[61] codetools_0.2-18    R6_2.5.1            gridExtra_2.3 \
+[64] zoo_1.8-11          knitr_1.44          dplyr_1.1.3 \
+[67] fastmap_1.1.1       future.apply_1.10.0 utf8_1.2.2 \
+[70] Hmisc_4.7-2         stringi_1.7.12      Rcpp_1.0.11 \
+[73] vctrs_0.6.3         rpart_4.1.19        png_0.1-8 \
 [76] tidyselect_1.2.0    xfun_0.40
 
 
