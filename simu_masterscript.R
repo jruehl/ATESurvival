@@ -8,7 +8,6 @@ library(riskRegression)
 library(prodlim)
 library(survival)
 library(doParallel)
-library(rngtools)
 library(doRNG)
 library(ATESurvival)
 library(ggplot2)
@@ -17,7 +16,7 @@ library(patchwork)
 
 # find true average treatment effect ###########################################
 
-# to save time, skip this section (l. 23-89) and use
+# to save time, skip this section (l. 22-88) and use
 # load("Results/ATE_true.Rda")
 
 # create table of scenarios
@@ -91,7 +90,7 @@ save(ATE_true, ATE_true_fig1, file = "Results/ATE_true.Rda")
 
 # run simulations ##############################################################
 
-# to save time, skip this section (l. 101-151) and use
+# to save time, skip this section (l. 100-150) and use
 # load("Results/res_[effect]ATE_[scenario]_n[n].Rda")
 # with 
 # effect: adv/no/
@@ -153,7 +152,7 @@ for(i in 1:dim(scenarios)[1]){
 
 # prepare outcomes #############################################################
 
-# to save time, skip this section (l. 159-245) and use
+# to save time, skip this section (l. 158-244) and use
 # load("Results/total_coverages.Rda")
 
 # summarize data for plots
@@ -283,9 +282,12 @@ for(scenario in c("noCens", "lowCens", "highCens",
     if(scenario == "lowCens" & effect == "yes"){
       ## Figure 2 ####
       png("Results/figure_2.png", width = 1200, height = 500)
-    }else if(scenario == "noCens" & effect == "adverse"){
+    }else if(scenario == "highTreatProb" & effect == "no"){
       ## Figure 3 ####
       png("Results/figure_3.png", width = 1200, height = 500)
+    }else if(scenario == "noCens" & effect == "adverse"){
+      ## Figure 4 ####
+      png("Results/figure_4.png", width = 1200, height = 500)
     }else{
       png(paste0("Results/coverage_CI_", 
                  ifelse(effect == "no", "no", 
@@ -305,8 +307,8 @@ for(scenario in c("noCens", "lowCens", "highCens",
                   "typeII")){
   for(effect in c("adverse", "no", "yes")){
     if(scenario == "highTreatProb" & effect == "yes"){
-      ## Figure 4 ####
-      png("Results/figure_4.png", width = 800, height = 500)
+      ## Figure 5 ####
+      png("Results/figure_5.png", width = 800, height = 500)
     }else{
       png(paste0("Results/coverage_CB_", 
                  ifelse(effect == "no", "no", 
@@ -319,12 +321,12 @@ for(scenario in c("noCens", "lowCens", "highCens",
   }
 }
 
-## Figure 5 ####
-png("Results/figure_5.png", width = 800, height = 500)
-plot_width_t("lowCens", "yes", "CI", t = 5)
-dev.off()
-
 ## Figure 6 ####
 png("Results/figure_6.png", width = 800, height = 500)
-plot_computation_times("lowCens", "yes")
+plot_width_t("noCens", "yes", "CI", t = 5)
+dev.off()
+
+## Figure 7 ####
+png("Results/figure_7.png", width = 800, height = 500)
+plot_computation_times("noCens", "yes")
 dev.off()
