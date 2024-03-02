@@ -54,14 +54,9 @@ Running under: Windows 10 x64 (build 19045)
 Matrix products: default
 
 locale: \
-<style>
-td, th {
-   border: none!important;
-}
-</style>
 | [1] LC_COLLATE=German_Germany.1252  | LC_CTYPE=German_Germany.1252 |
-| [3] LC_MONETARY=German_Germany.1252 | LC_NUMERIC=C |
-| [5] LC_TIME=German_Germany.1252 | |
+| [3] LC_MONETARY=German_Germany.1252 | LC_NUMERIC=C                 |
+| [5] LC_TIME=German_Germany.1252     |                              |
 
 attached base packages: \
 [1] parallel  stats     graphics  grDevices utils     datasets  methods \
