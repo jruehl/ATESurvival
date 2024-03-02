@@ -31,7 +31,7 @@ by Rühl, J. and Friedrich, S.:
   An R script that performs the analysis of the hd data reported in the manuscript, reproducing Table 3 and Figure 8.
 
 - ./simu_functions.R \
-  An R script that defines the functions used for the simulations reported in the manuscript. \ 
+  An R script that defines the functions used for the simulations reported in the manuscript. \
   The R script 'simu_masterscript.R' is based on these functions.
 
 - ./simu_masterscript.R \
