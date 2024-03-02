@@ -3,7 +3,7 @@ This repository includes the following folders and files corresponding to the ma
 by Rühl, J. and Friedrich, S.:
 
 - ./Results/ \
-  A folder containing (interim) results of the simulations (Section~4 in the manuscript).
+  A folder containing (interim) results of the simulations (Section 4 in the manuscript).
   
   - ATE_true.Rda \
     An Rda file containing results for the true average treatment effect considered in the simulations. \
@@ -46,10 +46,10 @@ To reproduce the simulation results presented in the manuscript (Section 4), ins
 Interim results are stored in the 'Results' folder. \
 To reproduce the analysis of the real data application (Section 5), install the package 'ATESurvival' and run the script 'hd_analysis.R'.
 
-The code was created and evaluated in R using the following software:
-R version 4.1.2 (2021-11-01)
-Platform: x86_64-w64-mingw32/x64 (64-bit)
-Running under: Windows 10 x64 (build 19045)
+The code was created and evaluated in R using the following software: \
+R version 4.1.2 (2021-11-01) \
+Platform: x86_64-w64-mingw32/x64 (64-bit) \
+Running under: Windows 10 x64 (build 19045) \
 
 Matrix products: default
 
