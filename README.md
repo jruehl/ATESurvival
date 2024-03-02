@@ -3,7 +3,7 @@ This repository includes the following folders and files corresponding to the ma
 by Rühl, J. and Friedrich, S.:
 
 - ./Results/ \
-  A folder containing (interim) results of the simulations (Section 4 in the manuscript).
+  A folder containing (interim) results of the simulations (Section~4 in the manuscript).
   
   - ATE_true.Rda \
     An Rda file containing results for the true average treatment effect considered in the simulations. \
