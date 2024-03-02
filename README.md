@@ -11,7 +11,7 @@ by Rühl, J. and Friedrich, S.:
 
   - res_[effect]ATE_[scenario]_n[n].Rda \
     (effect: adv/no/-, \
-     scenario: noCens/lowCens/highCens/lowTreatProb/highTreatProb/lowVarCov/highVarCov/typeII, \
+    \hphantom{(}scenario: noCens/lowCens/highCens/lowTreatProb/highTreatProb/lowVarCov/highVarCov/typeII, \
      n: 50/75/100/200/300) \
      Rda files containing results that summarize the outcomes of the simulations for each scenario. \
      These files are produced by l. 100-150 in the R script 'simu_masterscript.R'.  
