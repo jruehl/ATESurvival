@@ -49,20 +49,20 @@ To reproduce the analysis of the real data application (Section 5), install the 
 The code was created and evaluated in R using the following software: \
 R version 4.1.2 (2021-11-01) \
 Platform: x86_64-w64-mingw32/x64 (64-bit) \
-Running under: Windows 10 x64 (build 19045) \
+Running under: Windows 10 x64 (build 19045)
 
 Matrix products: default
 
-locale:
-[1] LC_COLLATE=German_Germany.1252  LC_CTYPE=German_Germany.1252   
-[3] LC_MONETARY=German_Germany.1252 LC_NUMERIC=C                   
+locale: \
+[1] LC_COLLATE=German_Germany.1252  LC_CTYPE=German_Germany.1252 \
+[3] LC_MONETARY=German_Germany.1252 LC_NUMERIC=C \
 [5] LC_TIME=German_Germany.1252    
 
-attached base packages:
-[1] parallel  stats     graphics  grDevices utils     datasets  methods  
-[8] base     
+attached base packages: \
+[1] parallel  stats     graphics  grDevices utils     datasets  methods \
+[8] base
 
-other attached packages:
+other attached packages: \
  [1] patchwork_1.1.2           ggplot2_3.4.1            
  [3] ATESurvival_1.0           doRNG_1.8.2              
  [5] rngtools_1.5.2            doParallel_1.0.17        
@@ -70,7 +70,7 @@ other attached packages:
  [9] survival_3.5-5            prodlim_2019.11.13       
 [11] riskRegression_2023.03.22
 
-loaded via a namespace (and not attached):
+loaded via a namespace (and not attached): \
  [1] splines_4.1.2       Formula_1.2-4       latticeExtra_0.6-30
  [4] globals_0.16.2      timereg_2.0.4       numDeriv_2016.8-1.1
  [7] pillar_1.9.0        backports_1.4.1     lattice_0.20-45    
@@ -99,16 +99,16 @@ loaded via a namespace (and not attached):
 [76] tidyselect_1.2.0    xfun_0.40
 
 
-The simulations were run in parallel on a Linux server with the subsequent software versions:
-R version 4.3.2 (2023-10-31)
-Platform: x86_64-pc-linux-gnu (64-bit)
-Running under: Ubuntu 22.04.3 LTS
+The simulations were run in parallel on a Linux server with the subsequent software versions: \
+R version 4.3.2 (2023-10-31) \
+Platform: x86_64-pc-linux-gnu (64-bit) \
+Running under: Ubuntu 22.04.3 LTS \
 
-Matrix products: default
-BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
+Matrix products: default \
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 \
 LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
 
-locale:
+locale: \
  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
@@ -116,17 +116,17 @@ locale:
  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
 [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 
-attached base packages:
+attached base packages: \
 [1] parallel  stats     graphics  grDevices utils     datasets  methods  
 [8] base     
 
-other attached packages:
+other attached packages: \
 [1] ATESurvival_1.0           doRNG_1.8.2              
 [3] rngtools_1.5.2            doParallel_1.0.17        
 [5] iterators_1.0.14          foreach_1.5.2            
 [7] survival_3.5-5            riskRegression_2023.03.22
 
-loaded via a namespace (and not attached):
+loaded via a namespace (and not attached): \
  [1] tidyselect_1.1.1     timeDate_3043.102    dplyr_1.0.8         
  [4] fastmap_1.1.0        TH.data_1.1-0        pROC_1.18.0         
  [7] caret_6.0-90         digest_0.6.33        rpart_4.1.23        
