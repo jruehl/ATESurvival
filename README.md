@@ -47,17 +47,18 @@ Interim results are stored in the 'Results' folder. \
 To reproduce the analysis of the real data application (Section 5), install the package 'ATESurvival' and run the script 'hd_analysis.R'.
 
 The code was created and evaluated in R using the following software: \
-R version 4.1.2 (2021-11-01) \
-Platform: x86_64-w64-mingw32/x64 (64-bit) \
+```
+R version 4.1.2 (2021-11-01)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
 Running under: Windows 10 x64 (build 19045)
+```
 
 Matrix products: default
 
-locale:
-
-| [1] LC_COLLATE=German_Germany.1252  | LC_CTYPE=German_Germany.1252 |
-| [3] LC_MONETARY=German_Germany.1252 | LC_NUMERIC=C                 |
-| [5] LC_TIME=German_Germany.1252     |                              |
+locale: \
+[1] LC_COLLATE=German_Germany.1252 LC_CTYPE=German_Germany.1252 \
+[3] LC_MONETARY=German_Germany.1252 LC_NUMERIC=C \
+[5] LC_TIME=German_Germany.1252 \
 
 attached base packages: \
 [1] parallel  stats     graphics  grDevices utils     datasets  methods \
