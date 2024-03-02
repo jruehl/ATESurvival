@@ -11,8 +11,8 @@ by Rühl, J. and Friedrich, S.:
 
   - res_[effect]ATE_[scenario]_n[n].Rda \
     (effect: adv/no/-, \
-    \hphantom{(}scenario: noCens/lowCens/highCens/lowTreatProb/highTreatProb/lowVarCov/highVarCov/typeII, \
-     n: 50/75/100/200/300) \
+      scenario: noCens/lowCens/highCens/lowTreatProb/highTreatProb/lowVarCov/highVarCov/typeII, \
+      n: 50/75/100/200/300) \
      Rda files containing results that summarize the outcomes of the simulations for each scenario. \
      These files are produced by l. 100-150 in the R script 'simu_masterscript.R'.  
 
@@ -24,7 +24,7 @@ by Rühl, J. and Friedrich, S.:
   An R package for the derivation of confidence intervals and bands for the average treatment effect for survival data using the classical bootstrap, an 
   influence function approach and the wild bootstrap. \
   To install the package, use the following command: \
-  install.packages("ATESurvival_1.0.tar.gz", repos = NULL, source = TRUE) \
+    install.packages("ATESurvival_1.0.tar.gz", repos = NULL, source = TRUE) \
   Note that on Windows systems, Rtools is required (see https://cran.r-project.org/bin/windows/Rtools/rtools43/rtools.html).
 
 - ./hd_analysis.R \
