@@ -52,16 +52,16 @@ generate_data <- function(n,
   }
   if(method  == "ozenne" | !is.null(m)){ # latent failure time model
     # generate type I event times
-    T1 <- rweibull(n, shape = 2, scale = 1/sqrt(1/100*exp(arg_T1)))
+    T1 <- rweibull(n, shape = 2, scale = 10/sqrt(exp(arg_T1)))
     if(is.null(m)){ # competing risks scenarios
       # generate type II event times
-      T2 <- rweibull(n, shape = 2, scale = 1/sqrt(1/100*exp(arg_T2)))
+      T2 <- rweibull(n, shape = 2, scale = 10/sqrt(exp(arg_T2)))
       # generate censoring times
       if(!cens){
         C <- Inf
       }else{
         arg_C <- delta_0*A + colSums(rep(c(-1,0,0,1,0,-1),2)*log(2) * t(Z))
-        C <- rweibull(n, shape = 2, scale = 1/sqrt(1/cens_par*exp(arg_C)))
+        C <- rweibull(n, shape = 2, scale = sqrt(cens_par/exp(arg_C)))
       }
       # save data
       data <- data.frame(time = pmin(T1, T2, C), 
@@ -75,7 +75,7 @@ generate_data <- function(n,
         event <- 1
       }else{ # setting with staggered entry & type II censoring
         # implement staggered entry (calendar time scale)
-        entry <- runif(n, 0, min(qweibull(m/n, 2, 1/sqrt(1/100*exp(arg_T1)))))
+        entry <- runif(n, 0, min(qweibull(m/n, 2, 10/sqrt(exp(arg_T1)))))
         # generate type II censoring times (calendar time scale)
         c <- sort(entry + T1)[m]
         event <- as.numeric(entry + T1 <= c)
@@ -90,7 +90,7 @@ generate_data <- function(n,
     }
   }else{ # cause-specific model
     # generate waiting times
-    time <- rweibull(n, shape = 2, scale = 10 / sqrt(exp(arg_T1) + exp(arg_T2)))
+    time <- rweibull(n, shape = 2, scale = 10/sqrt(exp(arg_T1) + exp(arg_T2)))
     # generate cause
     cause <- rbinom(n, size = 1, prob = exp(arg_T2) / (exp(arg_T1)+exp(arg_T2))) + 1
     # generate censoring times
@@ -98,7 +98,7 @@ generate_data <- function(n,
       C <- Inf
     }else{
       arg_C <- delta_0*A + colSums(rep(c(-1,0,0,1,0,-1),2)*log(2) * t(Z))
-      C <- rweibull(n, shape = 2, scale = 1/sqrt(1/cens_par*exp(arg_C)))
+      C <- rweibull(n, shape = 2, scale = sqrt(cens_par/exp(arg_C)))
     }
     # save data
     data <- data.frame(time = pmin(time, C), 
@@ -230,7 +230,7 @@ run <- function(n,
                     tryCatch({
                       # draw from data with replacement
                       data_bs <- data[sample(1:n, n, replace = TRUE),]
-                      # fit cause-specific Cox models
+                      # fit cause-specific Cox models for all causes
                       invisible(capture.output(
                         csc_bs <- CSC(
                           formula = 
@@ -317,7 +317,7 @@ run <- function(n,
       # prepare IF/WBS
       Cox_time <- proc.time()
       if(is.null(m)){ # competing risks scenarios
-        # fit cause-specific Cox models
+        # fit cause-specific Cox models for all causes
         invisible(capture.output(
           csc <- CSC(formula = list(Hist(time, event) ~ 
                                       A+z1+z2+z3+z4+z5+z6+z7+z8+z9+z10+z11+z12,
@@ -353,7 +353,7 @@ run <- function(n,
       try({
         
         # determine number of observed (uncensored) events for multipliers
-        event_num <- sum(data$event[order(data$time)] != 0)
+        event_num <- sum(data$event != 0)
         # compute weird bootstrap multipliers
         mult_Weird <- sapply(1:event_num, function(j){
           time <- sort(data$time)
@@ -728,9 +728,13 @@ plot_coverage_CI_t <- function(scenario, effect, t, ylim){
     aes(x = n, y = coverage)) +
     geom_hline(aes(yintercept = 95)) +
     geom_line(aes(color = type), linewidth=1.1) +
-    geom_point(aes(color = type), size=2) +
+    geom_point(aes(color = type, fill = type, shape = type), size=2) +
     scale_color_manual("", 
                        values = c('orange','red','turquoise4','cyan3','chartreuse2')) +
+    scale_fill_manual("", 
+                      values = c('orange','red','turquoise4','cyan3','chartreuse2')) +
+    scale_shape_manual("",
+                       values = c(19,15,17,25,23)) +
     labs(title = paste0("t = ", t), 
          x = "n", y = ifelse(t == 
                                ifelse((scenario != "typeII") | (effect == "no"), 1,
@@ -837,9 +841,13 @@ plot_coverage_CB <- function(scenario, effect){
   aes(x = n, y = coverage)) +
     geom_hline(aes(yintercept = 95)) +
     geom_line(aes(color = type), linewidth=1.1) +
-    geom_point(aes(color = type), size=2) +
+    geom_point(aes(color = type, fill = type, shape = type), size=2) +
     scale_color_manual("", 
                        values = c('orange','red','turquoise4','cyan3','chartreuse2')) +
+    scale_fill_manual("", 
+                      values = c('orange','red','turquoise4','cyan3','chartreuse2')) +
+    scale_shape_manual("",
+                       values = c(19,15,17,25,23)) +
     labs(title = paste0("Confidence band coverage (", 
                         ifelse(effect == "yes", "", paste0(effect, " ")), 
                         "treatment effect)"), 
