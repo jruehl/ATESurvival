@@ -615,7 +615,7 @@ run <- function(n,
                                           if(length(i) > 1){
                                             is.na(i[[1]][seq(1,9,2),])
                                           }else{
-                                            rep(TRUE, 25)
+                                            rep(TRUE, 5*length(t))
                                           }
                                         })), nrow=5,
                          dimnames=list(c("EBS",
@@ -637,7 +637,7 @@ run <- function(n,
                                if(length(i) > 1){
                                  i[[1]][seq(2,10,2),] - i[[1]][seq(1,9,2),]
                                }else{
-                                 rep(NA, 25)
+                                 rep(NA, 5*length(t))
                                }
                              }), na.rm = TRUE), 
              nrow=5, dimnames=list(c("EBS",
@@ -653,7 +653,7 @@ run <- function(n,
                                if(length(i) > 1){
                                  i[[2]][seq(2,10,2),] - i[[2]][seq(1,9,2),]
                                }else{
-                                 rep(NA, 25)
+                                 rep(NA, 5*length(t))
                                }
                              }), na.rm = TRUE), 
              nrow=5, dimnames=list(c("EBS",
