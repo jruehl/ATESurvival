@@ -152,7 +152,7 @@ for(i in 1:dim(scenarios)[1]){
 
 # prepare outcomes #############################################################
 
-# to save time, skip this section (l. 158-244) and use
+# to save time, skip this section (l. 158-248) and use
 # load("Results/total_coverages.Rda")
 
 # summarize data for plots
@@ -185,18 +185,20 @@ for(i in 1:dim(scenarios)[1]){
                         ifelse(scenarios$beta_0[i] == 2, "yes", 
                                ifelse(scenarios$beta_0[i] == -2, "adverse", NA))),
         n = n,
-        t = rep(t, each=5),
+        t = rep(t, each=6),
         type = factor(rep(c("EBS",
+                            "DR",
                             "IF",
-                            "WBS - Lin et al.",
-                            "WBS - Beyersmann et al.",
-                            "WBS - Weird bootstrap"), 
+                            "clustered IF",
+                            "WBS",
+                            "clustered WBS"), 
                           5),
                       levels = c("EBS",
+                                 "DR",
                                  "IF",
-                                 "WBS - Lin et al.",
-                                 "WBS - Beyersmann et al.",
-                                 "WBS - Weird bootstrap")),
+                                 "clustered IF",
+                                 "WBS",
+                                 "clustered WBS"))),
         coverage = c(eval(parse(
           text = paste0("res_", 
                         ifelse(scenarios$beta_0[i] == 0, "no", 
@@ -216,16 +218,18 @@ for(i in 1:dim(scenarios)[1]){
                         ifelse(scenarios$beta_0[i] == 2, "yes", 
                                ifelse(scenarios$beta_0[i] == -2, "adverse", NA))),
         n = n,
-        type = factor(c("EBS", 
+        type = factor(c("EBS",
+                        "DR",
                         "IF",
-                        "WBS - Lin et al.",
-                        "WBS - Beyersmann et al.",
-                        "WBS - Weird bootstrap"),
+                        "clustered IF",
+                        "WBS",
+                        "clustered WBS"),
                       levels = c("EBS",
+                                 "DR",
                                  "IF",
-                                 "WBS - Lin et al.",
-                                 "WBS - Beyersmann et al.",
-                                 "WBS - Weird bootstrap")),
+                                 "clustered IF",
+                                 "WBS",
+                                 "clustered WBS")),
         coverage = eval(parse(
           text = paste0("res_", 
                         ifelse(scenarios$beta_0[i] == 0, "no", 
