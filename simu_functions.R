@@ -46,6 +46,7 @@ generate_data <- function(n,
     p_treat <- exp(arg_treat) / (1 + exp(arg_treat))
   }
   A <- rbinom(n, 1, p_treat)
+  # generate event times
   arg_T1 <- beta_0*A + colSums(rep(c(1,0,1,0,0,1),2)*log(2) * t(Z))
   if(is.null(m)){
     arg_T2 <- gamma_0*A + colSums(rep(c(-1,0,0,0,1,1),2)*log(2) * t(Z))
@@ -580,8 +581,7 @@ run <- function(n,
                               ifelse(cens_par == 200, "low", 
                                      ifelse(cens_par == 50, "high", NA)))),
     # confidence intervals & bands, event time distributions, treatment probabilities, 
-    #   number of valid EBS samples, and computation times for each 
-    #   iteration
+    #   number of valid EBS samples, and computation times for each iteration
     results = res,
     # number of iterations with errors
     errors = sum(is.na(res)),
