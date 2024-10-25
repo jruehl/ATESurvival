@@ -16,7 +16,7 @@ library(patchwork)
 
 # find true average treatment effect ###########################################
 
-# to save time, skip this section (l. 22-88) and use
+# to save time, skip this section (l. 22-69) and use
 # load("Results/ATE_true.Rda")
 
 # create table of scenarios
@@ -24,8 +24,6 @@ ATE_true <- data.frame(m = c(rep("NULL", 9), rep("n/2", 3)),
                        sd_cov = rep(c(1, 0.5, 2, 1), each = 3), 
                        beta_0 = rep(c(-2, 0, 2), 4),
                        ATE_true = NA)
-# create matrix to store average treatment effects for Figure 1
-ATE_true_fig1 <- matrix(nrow = 2000, ncol = 101)
 
 # determine true average treatment effect
 set.seed(1234, kind = "Mersenne-Twister") # for reproducibility
@@ -53,13 +51,6 @@ for(i in 1:dim(ATE_true)[1]){
       ATEs[j,] <- diff(predictRisk(prodlim(Hist(time, event) ~ A, data=data), 
                                    newdata=data.frame(A=0:1), times=c(1,3,5,7,9),
                                    cause=1))
-      if(ATE_true$sd_cov[i] == 1){
-        # calculate average treatment effect for Figure 1
-        ATE_true_fig1[ifelse(ATE_true$beta_0[i] == -2, 0, 1000) + j,] <- 
-          diff(predictRisk(prodlim(Hist(time, event) ~ A, data=data), 
-                           newdata=data.frame(A=0:1), times=seq(0,10,0.1),
-                           cause=1))
-      }
     }else{ # setting with staggered entry & type II censoring
       if(ATE_true$beta_0[i] == -2){
         t <- c(2,4,6,8,10)
@@ -77,25 +68,8 @@ for(i in 1:dim(ATE_true)[1]){
                                  collapse = ", ")
 }
 
-# save results
-ATE_true_fig1 <- data.frame(t = rep(seq(0,10,0.1), 3),
-                            ATE_true = c(apply(ATE_true_fig1[1:1000,], 2, median, 
-                                               na.rm = TRUE),
-                                         rep(0, 101), 
-                                         apply(ATE_true_fig1[1001:2000,], 2, median, 
-                                               na.rm = TRUE)),
-                            beta_0 = c(rep("-2", 101), rep("0", 101), rep("2", 101)))
-save(ATE_true, ATE_true_fig1, file = "Results/ATE_true.Rda")
-
 
 # run simulations ##############################################################
-
-# to save time, skip this section (l. 100-150) and use
-# load("Results/res_[effect]ATE_[scenario]_n[n].Rda")
-# with 
-# effect: adv/no/
-# scenario: noCens/lowCens/highCens/lowTreatProb/highTreatProb/lowVarCov/highVarCov/typeII
-# n: 50/75/100/200/300
 
 # create table of scenarios
 scenarios <- data.frame(order = 1:24,
@@ -151,9 +125,6 @@ for(i in 1:dim(scenarios)[1]){
 
 
 # prepare outcomes #############################################################
-
-# to save time, skip this section (l. 158-248) and use
-# load("Results/total_coverages.Rda")
 
 # summarize data for plots
 total_coverage_CI <- data.frame()
@@ -250,55 +221,17 @@ save(total_coverage_CI, total_coverage_CB, file = "Results/total_coverages.Rda")
 
 # create plots #################################################################
 
-## Figure 1 ####
-png("Results/figure_1.png", width = 800, height = 500)
-ggplot(data = ATE_true_fig1, aes(x = t, y = ATE_true)) + 
-  geom_line(aes(linetype = beta_0), linewidth = 0.85) +
-  geom_point(data = ATE_true_fig1[c(rep(0, 5), rep(101, 5), rep(2 * 101, 5)) + 
-                                    rep(findInterval(c(1,3,5,7,9), seq(0,10,0.1)), 3),], 
-             shape = 19, size = 1.7) + 
-  scale_linetype_manual(name = "", values = c("solid","88","18"), 
-                        labels = c(expression(paste(beta[0], " = -2")),
-                                   expression(paste(beta[0], " = 0")),
-                                   expression(paste(beta[0], " = 2")))) + 
-  labs(x = "t", y = "ATE(t)") +
-  scale_x_continuous(expand = expansion(mult = c(0.03,0)), limits = c(0, 10), 
-                     breaks = c(1,3,5,7,9)) +
-  theme(text = element_text(size = 15), 
-        axis.title.x = element_text(margin = margin(t = 10, r = 10, b = 0, l = 0)),
-        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
-        axis.line = element_line(colour = "black"),
-        panel.grid.major = element_line(colour = "gray95"),
-        panel.background = element_blank(), 
-        legend.key = element_rect(fill = NA),
-        legend.key.width = unit(3,"line"),
-        legend.background = element_rect(colour = "black"),
-        legend.position = "bottom",
-        legend.text = element_text(margin = margin(r = 2, unit = "line")))
-dev.off()
-
 ## confidence interval coverages ####
 for(scenario in c("noCens", "lowCens", "highCens", 
                   "lowTreatProb", "highTreatProb", 
                   "lowVarCov", "highVarCov", 
                   "typeII")){
   for(effect in c("adverse", "no", "yes")){
-    if(scenario == "lowCens" & effect == "yes"){
-      ## Figure 2 ####
-      png("Results/figure_2.png", width = 1200, height = 500)
-    }else if(scenario == "highTreatProb" & effect == "no"){
-      ## Figure 3 ####
-      png("Results/figure_3.png", width = 1200, height = 500)
-    }else if(scenario == "noCens" & effect == "adverse"){
-      ## Figure 4 ####
-      png("Results/figure_4.png", width = 1200, height = 500)
-    }else{
-      png(paste0("Results/coverage_CI_", 
-                 ifelse(effect == "no", "no", 
-                        ifelse(effect == "yes", "", "adv")), 
-                 "ATE_", scenario, ".png"), 
-          width = 1200, height = 500)
-    }
+    png(paste0("Results/coverage_CI_", 
+               ifelse(effect == "no", "no", 
+                      ifelse(effect == "yes", "", "adv")), 
+               "ATE_", scenario, ".png"), 
+        width = 1200, height = 500)
     print(plot_coverage_CI(scenario, effect))
     dev.off()
   }
@@ -310,27 +243,20 @@ for(scenario in c("noCens", "lowCens", "highCens",
                   "lowVarCov", "highVarCov",
                   "typeII")){
   for(effect in c("adverse", "no", "yes")){
-    if(scenario == "highTreatProb" & effect == "yes"){
-      ## Figure 5 ####
-      png("Results/figure_5.png", width = 800, height = 500)
-    }else{
-      png(paste0("Results/coverage_CB_", 
-                 ifelse(effect == "no", "no", 
-                        ifelse(effect == "yes", "", "adv")), 
-                 "ATE_", scenario, ".png"), 
-          width = 800, height = 500)
-    }
+    png(paste0("Results/coverage_CB_", 
+               ifelse(effect == "no", "no", 
+                      ifelse(effect == "yes", "", "adv")), 
+               "ATE_", scenario, ".png"), 
+        width = 800, height = 500)
     print(plot_coverage_CB(scenario, effect))
     dev.off()
   }
 }
 
-## Figure 6 ####
-png("Results/figure_6.png", width = 800, height = 500)
+png("Results/width_CI_ATE_noCens.png", width = 800, height = 500)
 plot_width_t("noCens", "yes", "CI", t = 5)
 dev.off()
 
-## Figure 7 ####
-png("Results/figure_7.png", width = 800, height = 500)
+png("Results/time_ATE_noCens.png", width = 800, height = 500)
 plot_computation_times("noCens", "yes")
 dev.off()
