@@ -449,7 +449,7 @@ run <- function(n,
         res_EBS <- EBS(m=m, t=t, n=n, data=data, EBS_iter=EBS_iter, i=i, seed=seed, cores=cores)
         EBS_invalid <- apply(res_EBS, 1, function(t){sum(is.na(t))})
         res_EBS <- pmin(pmax(res_EBS, -1, na.rm=TRUE), 1, na.rm=TRUE)
-        # derive confidence intervals
+        # derive confidence intervals & bands
         CI_EBS <- list(rbind(apply(res_EBS, 1, quantile, 0.025, na.rm=TRUE),
                              apply(res_EBS, 1, quantile, 0.975, na.rm=TRUE)),
                        EBS_invalid)
@@ -526,7 +526,7 @@ run <- function(n,
                           PS_BS = do.call(cbind, dr_quantities[[2]]),
                           u_BS = do.call(cbind, dr_quantities[[3]]))
         }
-        # derive double resampling confidence intervals & bands
+        # derive confidence intervals & bands
         CI_dr <- rbind(pmax(ATE_m + apply(res_dr, 2, quantile, 0.025, na.rm=TRUE), -1),
                        pmin(ATE_m + apply(res_dr, 2, quantile, 0.975, na.rm=TRUE), 1))
         # determine quantile for confidence bands
@@ -738,7 +738,7 @@ run <- function(n,
         }
 
         IF_cluster_time_calc <- proc.time()
-        # calculate combined standard error
+        # calculate combined standard error (IF)
         SE_IF_cluster <- sqrt((dim(data_matched)[1]^2 / 
                                  (dim(data_matched)[1] - 1) * 
                                  ATE_independent$SE_IF^2 +
@@ -765,7 +765,7 @@ run <- function(n,
         IF_cluster_time <- IF_cluster_time + 
           (proc.time() - IF_cluster_time_calc)[3]*1e3
         WBS_cluster_time_calc <- proc.time()
-        # calculate combined standard error
+        # calculate combined standard error (WBS)
         SE_WBS_cluster <- sqrt((dim(data_matched)[1]^2 / 
                                   (dim(data_matched)[1] - 1) * 
                                   ATE_independent$SE_WBS^2 +
