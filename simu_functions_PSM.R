@@ -1,4 +1,5 @@
-# This script includes the functions to produce the results of the simulation study.
+# This script includes the functions to produce the results of the simulation study
+# w.r.t. PS matching.
 
 # generate data ################################################################
 
