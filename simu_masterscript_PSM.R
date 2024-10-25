@@ -169,7 +169,7 @@ for(i in 1:dim(scenarios)[1]){
                                  "IF",
                                  "clustered IF",
                                  "WBS",
-                                 "clustered WBS"))),
+                                 "clustered WBS")),
         coverage = c(eval(parse(
           text = paste0("res_", 
                         ifelse(scenarios$beta_0[i] == 0, "no", 
