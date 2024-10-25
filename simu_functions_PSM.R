@@ -1152,7 +1152,7 @@ plot_coverage_CB <- function(scenario, effect){
   }else if(ylim[2]-ylim[1] <= 60){
     labels <- as.character(c(seq(0,50,10),
                              seq(55,90,5),
-                             c(rbind(rep("", 2),rep("", 2),rep("", 2),
+                             c(rbind(rep("", 2),rep("", 2),rep("", 2),rep("", 2),
                                      c(95, 100)))))
   }else{
     labels <- as.character(c(c(rbind(seq(0,50,20),
