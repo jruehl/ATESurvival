@@ -722,7 +722,7 @@ p1_d <- ggplot(data = res_d, aes(x = time)) +
   scale_x_continuous(breaks=seq(0,35,5), 
                      labels = c("0","","10","","20","","30","")) +
   scale_y_continuous(breaks = seq(-30,45,5), 
-                     labels = c("-30","","-20","","-10","","0","","10","","20","","30","","40"), 
+                     labels = c("-30","","-20","","-10","","0","","10","","20","","30","","40",""), 
                      limits = c(-30,41.5)) +
   theme(text = element_text(size=15),
         plot.title = element_text(hjust=0.5, face="bold"),
@@ -747,7 +747,7 @@ p2_d <- ggplot(data = res_d, aes(x = time)) +
   scale_x_continuous(breaks=seq(0,35,5), 
                      labels = c("0","","10","","20","","30","")) +
   scale_y_continuous(breaks = seq(-30,45,5), 
-                     labels = c("-30","","-20","","-10","","0","","10","","20","","30","","40"), 
+                     labels = c("-30","","-20","","-10","","0","","10","","20","","30","","40",""), 
                      limits = c(-30,41.5)) +
   theme(text = element_text(size=15),
         plot.title = element_text(hjust=0.5, face="bold"),
