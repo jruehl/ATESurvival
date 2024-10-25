@@ -756,5 +756,5 @@ p2_d <- ggplot(data = res_d, aes(x = time)) +
         panel.background = element_rect(fill=NA), 
         panel.border = element_rect(fill=NA),
         legend.position = "none")
-p_r <- plot_grid(p1_r + theme(legend.position = "none"), p2_r)
-plot_grid(p_r, get_legend(p1_r), nrow=2, rel_heights = c(0.75, 0.2))
+p_d <- plot_grid(p1_d + theme(legend.position = "none"), p2_d)
+plot_grid(p_d, get_legend(p1_d), nrow=2, rel_heights = c(0.75, 0.2))
