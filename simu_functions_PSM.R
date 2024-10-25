@@ -952,7 +952,7 @@ run <- function(n,
                                  rep(NA, 6*length(t))
                                }
                              }), na.rm = TRUE), 
-             nrow=5, dimnames=list(c("EBS",
+             nrow=6, dimnames=list(c("EBS",
                                      "double resampling",
                                      "IF",
                                      "clustered IF",
@@ -969,7 +969,7 @@ run <- function(n,
                                  rep(NA, 6*length(t))
                                }
                              }), na.rm = TRUE), 
-             nrow=5, dimnames=list(c("EBS",
+             nrow=6, dimnames=list(c("EBS",
                                      "double resampling",
                                      "IF",
                                      "clustered IF",
