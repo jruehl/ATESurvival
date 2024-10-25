@@ -1028,11 +1028,19 @@ plot_coverage_CI_t <- function(scenario, effect, t, ylim){
                              seq(55,90,5), 
                              c(rbind(rep("", 5), 
                                      seq(92, 100, 2)))))
-  }else{
+  }else if(ylim[2]-ylim[1] <= 60){
     labels <- as.character(c(seq(0,50,10), 
                              seq(55,90,5), 
                              c(rbind(rep("", 2),rep("", 2),rep("", 2),rep("", 2), 
                                      c(95, 100)))))
+  }else{
+    labels <- as.character(c(c(rbind(seq(0,50,20), 
+                                     rep("",3))),
+                             "",
+                             c(rbind(seq(60,90,10),
+                                     rep("",4))),
+                             rep("", 8),
+                             100))
   }
   # create plot
   ggplot(data = total_coverage_CI[
@@ -1044,11 +1052,11 @@ plot_coverage_CI_t <- function(scenario, effect, t, ylim){
     geom_line(aes(color = type), linewidth=1.1) +
     geom_point(aes(color = type, fill = type, shape = type), size=2) +
     scale_color_manual("", 
-                       values = c('orange','red','turquoise4','cyan3','chartreuse2')) +
+                       values = c('orange','purple','red','darkred','turquoise4','darkblue')) +
     scale_fill_manual("", 
-                      values = c('orange','red','turquoise4','cyan3','chartreuse2')) +
+                      values = c('orange','purple','red','darkred','turquoise4','darkblue')) +
     scale_shape_manual("",
-                       values = c(19,15,17,25,23)) +
+                       values = c(19,23,0,15,2,17)) +
     labs(title = paste0("t = ", t), 
          x = "n", y = ifelse(t == 
                                ifelse((scenario != "typeII") | (effect == "no"), 1,
@@ -1141,11 +1149,19 @@ plot_coverage_CB <- function(scenario, effect){
                              seq(55,90,5), 
                              c(rbind(rep("", 5), 
                                      seq(92, 100, 2)))))
-  }else{
-    labels <- as.character(c(seq(0,50,10), 
-                             seq(55,90,5), 
-                             c(rbind(rep("", 2),rep("", 2),rep("", 2),rep("", 2), 
+  }else if(ylim[2]-ylim[1] <= 60){
+    labels <- as.character(c(seq(0,50,10),
+                             seq(55,90,5),
+                             c(rbind(rep("", 2),rep("", 2),rep("", 2),
                                      c(95, 100)))))
+  }else{
+    labels <- as.character(c(c(rbind(seq(0,50,20),
+                                     rep("",3))),
+                             "",
+                             c(rbind(seq(60,90,10),
+                                     rep("",4))),
+                             rep("",8),
+                             100))
   }
   # create plot
   ggplot(data = total_coverage_CB[
@@ -1157,11 +1173,11 @@ plot_coverage_CB <- function(scenario, effect){
     geom_line(aes(color = type), linewidth=1.1) +
     geom_point(aes(color = type, fill = type, shape = type), size=2) +
     scale_color_manual("", 
-                       values = c('orange','red','turquoise4','cyan3','chartreuse2')) +
+                       values = c('orange','purple','red','darkred','turquoise4','darkblue')) +
     scale_fill_manual("", 
-                      values = c('orange','red','turquoise4','cyan3','chartreuse2')) +
+                      values = c('orange','purple','red','darkred','turquoise4','darkblue')) +
     scale_shape_manual("",
-                       values = c(19,15,17,25,23)) +
+                       values = c(19,23,0,15,2,17)) +
     labs(title = paste0("Confidence band coverage (", 
                         ifelse(effect == "yes", "", paste0(effect, " ")), 
                         "treatment effect)"), 
@@ -1217,16 +1233,18 @@ plot_width_t <- function(scenario, effect, type, t){
         data.frame(
           n = n, 
           type = factor(rep(c("EBS",
+                              "DR",
                               "IF",
-                              "WBS - Lin et al.",
-                              "WBS - Beyersmann et al.",
-                              "WBS - Weird bootstrap"), 
+                              "clustered IF",
+                              "WBS",
+                              "clustered WBS"), 
                             5000), 
                         levels = c("EBS",
+                                   "DR",
                                    "IF",
-                                   "WBS - Lin et al.",
-                                   "WBS - Beyersmann et al.",
-                                   "WBS - Weird bootstrap")),
+                                   "clustered IF",
+                                   "WBS",
+                                   "clustered WBS")),
           width = c(unlist(sapply(eval(parse(
             text = paste0("res_", 
                           ifelse(effect == "no", "no", 
@@ -1235,12 +1253,12 @@ plot_width_t <- function(scenario, effect, type, t){
           )), 
           function(i){
             if(length(i) > 1){
-              i[[1]][seq(2,10,2),
+              i[[1]][seq(2,12,2),
                      which(as.character(t) == all_t)] - 
-                i[[1]][seq(1,9,2),
+                i[[1]][seq(1,11,2),
                        which(as.character(t) == all_t)]
             }else{
-              rep(NA, 5)
+              rep(NA, 6)
             }
           }
           )))
@@ -1254,16 +1272,18 @@ plot_width_t <- function(scenario, effect, type, t){
         data.frame(
           n = n, 
           type = factor(rep(c("EBS", 
+                              "DR",
                               "IF",
-                              "WBS - Lin et al.",
-                              "WBS - Beyersmann et al.",
-                              "WBS - Weird bootstrap"), 
+                              "clustered IF",
+                              "WBS",
+                              "clustered WBS"), 
                             5000), 
-                        levels = c("EBS", 
+                        levels = c("EBS",
+                                   "DR",
                                    "IF",
-                                   "WBS - Lin et al.",
-                                   "WBS - Beyersmann et al.",
-                                   "WBS - Weird bootstrap")),
+                                   "clustered IF",
+                                   "WBS",
+                                   "clustered WBS")),
           width = c(unlist(sapply(eval(parse(
             text = paste0("res_", 
                           ifelse(effect == "no", "no", 
@@ -1272,12 +1292,12 @@ plot_width_t <- function(scenario, effect, type, t){
           )), 
           function(i){
             if(length(i) > 1){
-              i[[2]][seq(2,10,2),
+              i[[2]][seq(2,12,2),
                      which(as.character(t) == all_t)] - 
-                i[[2]][seq(1,9,2),
+                i[[2]][seq(1,11,2),
                        which(as.character(t) == all_t)]
             }else{
-              rep(NA, 5)
+              rep(NA, 6)
             }
           }
           )))
@@ -1316,8 +1336,8 @@ plot_width_t <- function(scenario, effect, type, t){
                  stat = "identity", position = "dodge", outlier.shape = NA) + 
     geom_point(data = outliers, aes(x = factor(n), y = width, col = outlier, group = type), 
                size = 0.5, position = position_dodge(width=0.9), show.legend = FALSE) + 
-    scale_fill_manual("", values = c('orange','red','turquoise4','cyan3','chartreuse2'),
-                      breaks = c("EBS","IF","WBS - Lin et al.","WBS - Beyersmann et al.","WBS - Weird bootstrap")) +
+    scale_fill_manual("", values = c('orange','purple','red','darkred','turquoise4','darkblue'),
+                      breaks = c("EBS","DR","IF","clustered IF","WBS","clustered WBS")) +
     scale_color_manual("", values = c("black","gray50"), na.translate = FALSE) + 
     labs(title = paste0("Confidence ", ifelse(type == "CI", "interval", "band"), 
                         " width at t = ", t, 
@@ -1359,7 +1379,9 @@ plot_computation_times <- function(scenario, effect){
       data,
       data.frame(
         n = n, 
-        type = rep(c("EBS","IF","WBS"), each = 5000),
+        type = factor(rep(c("EBS","DR","IF","clustered IF","WBS","clustered WBS"), 
+                          each = 5000),
+                     levels = c("EBS","DR","IF","clustered IF","WBS","clustered WBS")),
         time = c(t(sapply(eval(parse(
           text = paste0("res_", 
                         ifelse(effect == "no", "no", 
@@ -1392,6 +1414,10 @@ plot_computation_times <- function(scenario, effect){
                                outliers$time > outliers$extreme_outlier_up,
                              "extreme", outliers$outlier)
   outliers$outlier <- factor(outliers$outlier, levels = c("mild","extreme"))
+  outliers <- outliers[order(outliers$n, outliers$type, outliers$time),
+                      c("n","type","time","outlier")]
+  outliers$time <- round(outliers$time, 2)
+  outliers <- outliers[!duplicated(outliers),]
   
   # create plot
   ggplot(data = sum, aes(x = factor(n), fill = type)) + 
@@ -1403,7 +1429,8 @@ plot_computation_times <- function(scenario, effect){
                  outlier.shape = NA, show.legend = FALSE) + 
     geom_point(data = outliers, aes(x = factor(n), y = time, col = outlier, group = type), 
                size = 1, position = position_dodge(width=0.9), show.legend = FALSE) + 
-    scale_fill_manual("", values = c('orange','red','turquoise'), 
+    scale_fill_manual("", values = c('orange','purple','red','darkred','turquoise4','darkblue'), 
+                      breaks = c("EBS","DR","IF","clustered IF","WBS","clustered WBS"),
                       na.translate = F) +
     scale_color_manual("", values = c("black","gray50"), na.translate = FALSE) + 
     guides(fill = guide_legend(override.aes = list(shape = NA))) +
