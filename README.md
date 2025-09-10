@@ -1,9 +1,10 @@
-This repository includes the following folders and files corresponding to the manuscript \
-"Resampling-based confidence intervals and bands for the average treatment effect in observational studies with competing risks" \
+This repository includes the following folders and files corresponding to the manuscripts \
+[1] "Resampling-based confidence intervals and bands for the average treatment effect in observational studies with competing risks" \
+and [2] "Using propensity score matching for inference about the average treatment effect in competing-risks data" \
 by Rühl, J. and Friedrich, S.:
 
 - ./Results/ \
-  A folder containing (interim) results of the simulations (Section 4 in the manuscript).
+  A folder containing (interim) results of the simulations (Section 4) in manuscript [1].
   
   - ATE_true.Rda \
     An Rda file containing results for the true average treatment effect considered in the simulations. \
@@ -20,6 +21,24 @@ by Rühl, J. and Friedrich, S.:
     An Rda file containing results for the coverages of the simulated confidence intervals and bands. \
     This file is produced by l. 158-244 in the R script 'simu_masterscript.R'.
 
+- ./Results_PSM/ \
+  A folder containing (interim) results of the simulations (Section X) in manuscript [2].
+  
+  - ATE_true.Rda \
+    An Rda file containing results for the true average treatment effect considered in the simulations. \
+    This file is produced by l. 22-88 in the R script 'simu_masterscript_PSM.R'. 
+
+  - res_[effect]ATE_[scenario]_n[n].Rda \
+    (effect: adv/no/-, \
+     scenario: noCens/lowCens/highCens/lowTreatProb/highTreatProb/lowVarCov/highVarCov/typeII, \
+     n: 50/75/100/200/300) \
+     Rda files containing results that summarize the outcomes of the simulations for each scenario. \
+     These files are produced by l. 100-150 in the R script 'simu_masterscript_PSM.R'.  
+
+  - total_coverages.Rda \
+    An Rda file containing results for the coverages of the simulated confidence intervals and bands. \
+    This file is produced by l. 158-244 in the R script 'simu_masterscript_PSM.R'.
+
 - ./ATESurvival_1.0.tar.gz \
   An R package for the derivation of confidence intervals and bands for the average treatment effect for survival data using the classical bootstrap, an 
   influence function approach and the wild bootstrap. \
@@ -28,23 +47,40 @@ by Rühl, J. and Friedrich, S.:
   Note that on Windows systems, Rtools is required (see https://cran.r-project.org/bin/windows/Rtools/rtools43/rtools.html).
 
 - ./hd_analysis.R \
-  An R script that performs the analysis of the hd data reported in the manuscript, reproducing Table 3 and Figure 8.
+  An R script that performs the analysis of the hd data reported in manuscript [1], reproducing Table 3 and Figure 8.
+
+- ./hd_analysis_PSM.R \
+  An R script that performs the analysis of the hd data reported in manuscript [2], reproducing Table X and Figure X.
 
 - ./simu_functions.R \
-  An R script that defines the functions used for the simulations reported in the manuscript. \
+  An R script that defines the functions used for the simulations reported in manuscript [1]. \
   The R script 'simu_masterscript.R' is based on these functions.
 
+- ./simu_functions_PSM.R \
+  An R script that defines the functions used for the simulations reported in manuscript [2]. \
+  The R script 'simu_masterscript_PSM.R' is based on these functions.
+
 - ./simu_masterscript.R \
-  An R script that performs the simulations reported in the manuscript, reproducing Figures 1 - 7. \
+  An R script that performs the simulations reported in manuscript [1], reproducing Figures 1 - 7. \
   The simulations were run in parallel on a Linux server with 16 cores. \
   Replication on a Windows system occasionally yielded slightly different confidence intervals/bands, but the differences should be neglegible. \
   Interim results are saved in the folder ./Results as the execution of the complete simulation study takes several days. To check reproducibility, one might reduce the number of iterations by choosing a smaller number for the parameter 'iter' of the function 'run' (l. 146 in the script 'simu_masterscript.R').
 
+- ./simu_masterscript_PSM.R \
+  An R script that performs the simulations reported in manuscript [2], reproducing Figures X - X. \
+  The simulations were run in parallel on a Linux server with 16 cores. \
+  Replication on a Windows system occasionally yielded slightly different confidence intervals/bands, but the differences should be neglegible. \
+  Interim results are saved in the folder ./Results_PSM as the execution of the complete simulation study takes several days. To check reproducibility, one might reduce the number of iterations by choosing a smaller number for the parameter 'iter' of the function 'run' (l. 146 in the script 'simu_masterscript_PSM.R').
+
 ---
 
-To reproduce the simulation results presented in the manuscript (Section 4), install the package 'ATESurvival' and run the script 'simu_masterscript.R'. \
+To reproduce the simulation results presented in manuscript [1] (Section 4), install the package 'ATESurvival' and run the script 'simu_masterscript.R'. \
 Interim results are stored in the 'Results' folder. \
 To reproduce the analysis of the real data application (Section 5), install the package 'ATESurvival' and run the script 'hd_analysis.R'.
+
+To reproduce the simulation results presented in manuscript [2] (Section X), install the package 'ATESurvival' and run the script 'simu_masterscript_PSM.R'. \
+Interim results are stored in the 'Results_PSM' folder. \
+To reproduce the analysis of the real data application (Section X), install the package 'ATESurvival' and run the script 'hd_analysis_PSM.R'.
 
 The code was created and evaluated in R using the following software:
 ```
