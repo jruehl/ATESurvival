@@ -40,7 +40,7 @@ by Rühl, J. and Friedrich, S.:
   influence function approach and the wild bootstrap. \
   To install the package, use the following command: \
   `install.packages("ATESurvival_1.0.tar.gz", repos = NULL, source = TRUE)` \
-  Note that on Windows systems, Rtools is required (see https://cran.r-project.org/bin/windows/Rtools/rtools43/rtools.html).
+  Note that on Windows systems, Rtools is required (see https://cran.r-project.org/bin/windows/Rtools/rtools45/rtools.html).
 
 - ./hd_analysis.R \
   An R script that performs the analysis of the hd data reported in manuscript [1], reproducing Table 3 and Figure 8.
