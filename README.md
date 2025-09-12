@@ -37,7 +37,7 @@ by Rühl, J. and Friedrich, S.:
 
 - ./ATESurvival_1.0.tar.gz \
   An R package for the derivation of confidence intervals and bands for the average treatment effect for survival data using the classical bootstrap, an 
-  influence function approach and the wild bootstrap. \
+  influence function approach, the wild bootstrap, or a double-resampling approach for PS-matched data. \
   To install the package, use the following command: \
   `install.packages("ATESurvival_1.0.tar.gz", repos = NULL, source = TRUE)` \
   Note that on Windows systems, Rtools is required (see https://cran.r-project.org/bin/windows/Rtools/rtools45/rtools.html).
